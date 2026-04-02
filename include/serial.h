@@ -10,5 +10,7 @@
 void serial_init(void);
 void serial_putchar(char c);
 void serial_puts(const char *str);
+void serial_puts_hex(uint32_t val);
+void serial_log(const char *fmt, ...);
 
 #endif /* SERIAL_H */

@@ -6,7 +6,8 @@ AS      = nasm
 LD      = i686-elf-ld
 
 CFLAGS  = -m32 -ffreestanding -fno-stack-protector -fno-builtin \
-          -nostdlib -nostdinc -Wall -Wextra -Iinclude
+          -nostdlib -nostdinc -Wall -Wextra -Iinclude \
+          -I/home/raunak/opt/cross/lib/gcc/i686-elf/13.2.0/include
 ASFLAGS = -f elf32
 LDFLAGS = -T linker.ld -nostdlib
 

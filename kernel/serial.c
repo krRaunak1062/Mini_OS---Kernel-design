@@ -87,3 +87,72 @@ void serial_puts(const char *str)
         serial_putchar(*str++);
     }
 }
+
+void serial_puts_hex(uint32_t val)
+{
+    char buf[11];   /* "0x" + 8 hex digits + null */
+    buf[0] = '0'; buf[1] = 'x';
+    for (int i = 9; i >= 2; i--) {
+        uint8_t nibble = val & 0xF;
+        buf[i] = nibble < 10 ? '0' + nibble : 'A' + nibble - 10;
+        val >>= 4;
+    }
+    buf[10] = '\0';
+    serial_puts(buf);
+}
+/*
+/*
+ * Function: serial_log
+ * Description: printf-style serial logger using variadic args.
+ * Supports: %s (string), %d (decimal), %x (hex), %c (char)
+ * Implements: EXT-COM-01
+ */
+void serial_log(const char *fmt, ...)
+{
+    __builtin_va_list args;
+    __builtin_va_start(args, fmt);
+
+    while (*fmt) {
+        if (*fmt != '%') {
+            serial_putchar(*fmt++);
+            continue;
+        }
+        fmt++;  /* skip % */
+        switch (*fmt) {
+            case 's': {
+                const char *s = __builtin_va_arg(args, const char *);
+                if (s) serial_puts(s);
+                break;
+            }
+            case 'd': {
+                int val = __builtin_va_arg(args, int);
+                if (val < 0) { serial_putchar('-'); val = -val; }
+                char buf[12]; int i = 0;
+                if (val == 0) { serial_putchar('0'); break; }
+                while (val > 0) { buf[i++] = '0' + (val % 10); val /= 10; }
+                while (i--) serial_putchar(buf[i]);
+                break;
+            }
+            case 'x': {
+                uint32_t val = __builtin_va_arg(args, uint32_t);
+                serial_puts("0x");
+                for (int i = 28; i >= 0; i -= 4) {
+                    uint8_t nibble = (val >> i) & 0xF;
+                    serial_putchar(nibble < 10 ? '0'+nibble : 'A'+nibble-10);
+                }
+                break;
+            }
+            case 'c': {
+                char c = (char)__builtin_va_arg(args, int);
+                serial_putchar(c);
+                break;
+            }
+            default:
+                serial_putchar('%');
+                serial_putchar(*fmt);
+                break;
+        }
+        fmt++;
+    }
+    __builtin_va_end(args);
+}

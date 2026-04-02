@@ -2,7 +2,9 @@ ENTRY(boot_start)
 
 SECTIONS
 {
-    . = 0x00100000;
+    . = 0x00100000;    /* load address from S0 */
+
+    kernel_start = .;    /* sprint 1 addition */
 
     .text ALIGN(4096) :
     {
