@@ -7,8 +7,9 @@ LD      = i686-elf-ld
 
 CFLAGS  = -m32 -ffreestanding -fno-stack-protector -fno-builtin \
           -nostdlib -nostdinc -Wall -Wextra -Iinclude \
-          -I/home/raunak/opt/cross/lib/gcc/i686-elf/13.2.0/include
-ASFLAGS = -f elf32
+          -I/home/raunak/opt/cross/lib/gcc/i686-elf/13.2.0/include \
+		  -g
+ASFLAGS = -f elf32 -g
 LDFLAGS = -T linker.ld -nostdlib
 
 # Source files
@@ -56,3 +57,5 @@ clean:
 	rm -rf $(OBJ) kernel.elf isodir MiniOS.iso
 
 .PHONY: all iso run debug clean
+gdb-debug: kernel.elf
+	qemu-system-i386 -kernel kernel.elf -serial stdio -display none -m 64M -s -S

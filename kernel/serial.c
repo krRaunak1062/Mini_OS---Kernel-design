@@ -100,11 +100,23 @@ void serial_puts_hex(uint32_t val)
     buf[10] = '\0';
     serial_puts(buf);
 }
-/*
+
 /*
  * Function: serial_log
  * Description: printf-style serial logger using variadic args.
- * Supports: %s (string), %d (decimal), %x (hex), %c (char)
+ * Supports: %s (string), %d (decimal), %u (unsigned), %x (hex), %c (char)
+ *
+ * NOTE: serial.h defines  #define serial_printf serial_log
+ *       so all serial_printf() call sites resolve here at compile time.
+ *       Do NOT add a separate serial_printf() function — it would clash
+ *       with that macro and cause a redefinition error.
+ *
+ * BUG FIX (S2): %x no longer emits a hardcoded "0x" prefix.
+ *   The specifier now prints ONLY the hex digits, matching standard
+ *   printf behaviour.  Callers that want the "0x" prefix must write it
+ *   in the format string:  serial_printf("addr: 0x%x\n", val)
+ *   This eliminates the "0x0x..." double-prefix seen in S2 serial output.
+ *
  * Implements: EXT-COM-01
  */
 void serial_log(const char *fmt, ...)
@@ -133,9 +145,20 @@ void serial_log(const char *fmt, ...)
                 while (i--) serial_putchar(buf[i]);
                 break;
             }
-            case 'x': {
+            case 'u': {
+                /* Unsigned decimal — needed for sizes/counts that may
+                 * exceed INT_MAX (e.g. heap total_free bytes). */
                 uint32_t val = __builtin_va_arg(args, uint32_t);
-                serial_puts("0x");
+                char buf[12]; int i = 0;
+                if (val == 0) { serial_putchar('0'); break; }
+                while (val > 0) { buf[i++] = '0' + (val % 10); val /= 10; }
+                while (i--) serial_putchar(buf[i]);
+                break;
+            }
+            case 'x': {
+                /* Prints raw hex digits only — NO "0x" prefix added here.
+                 * Write "0x%x" in the format string if the prefix is wanted. */
+                uint32_t val = __builtin_va_arg(args, uint32_t);
                 for (int i = 28; i >= 0; i -= 4) {
                     uint8_t nibble = (val >> i) & 0xF;
                     serial_putchar(nibble < 10 ? '0'+nibble : 'A'+nibble-10);
