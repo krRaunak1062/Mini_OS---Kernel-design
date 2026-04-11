@@ -1,8 +1,9 @@
 /**
  * arch/x86/pit.c
- * Implements: REQ-TASK-02
+ * Implements: REQ-TASK-02, REQ-TASK-04
  *
  * Programs PIT channel 0 for 100 Hz (10 ms tick).
+ * S4 update: pit_irq0_handler() now calls sched_switch() every tick.
  *
  * Base oscillator : 1,193,182 Hz
  * Desired freq    : 100 Hz
@@ -16,6 +17,7 @@
 
 #include "pit.h"
 #include "pic.h"
+#include "sched.h"   /* sched_switch() — REQ-TASK-04 */
 
 /* Tick counter — volatile because IRQ handler writes, other code reads */
 volatile uint32_t pit_tick_count = 0;
@@ -54,16 +56,19 @@ void pit_init(void)
 /* ---------------------------------------------------------------
  * pit_irq0_handler — fired every ~10 ms via IRQ0.
  *
- * S4 NOTE: once the scheduler exists, add:
- *   if (pit_tick_count % 1 == 0) sched_switch();
- * (every tick for a 10ms quantum).
- * Implements: REQ-TASK-02
+ * EOI is sent BEFORE sched_switch() so the PIC is re-armed and
+ * the next IRQ is not missed during the context switch.
+ *
+ * sched_switch() is a no-op when current_task == NULL (before
+ * sched_start()), so it is safe to call unconditionally.
+ *
+ * Implements: REQ-TASK-02, REQ-TASK-04
  * --------------------------------------------------------------- */
 void pit_irq0_handler(void)
 {
     pit_tick_count++;
-    /* sched_switch() will be called here once S4 lands */
-    pic_send_eoi(0);    /* IRQ0 → EOI to master PIC only */
+    pic_send_eoi(0);   /* EOI to master PIC BEFORE context switch */
+    sched_switch();    /* round-robin: pick next task, context_switch() */
 }
 
 /* ---------------------------------------------------------------

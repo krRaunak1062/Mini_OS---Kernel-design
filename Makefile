@@ -36,14 +36,21 @@ ARCH_C_OBJ = arch/x86/gdt.o \
 #   EXCLUDED from build (kept on disk for Git history):
 #     idt_asm.asm    — duplicate idt_flush symbol, idt_flush.asm is identical
 #
+#   S4: context_switch.asm added here (explicit) and excluded from
+#       ARCH_ASM_WILD below to prevent it being linked twice.
+#
 ARCH_ASM_OBJ = arch/x86/idt_flush.o \
-               arch/x86/isr_stubs.o
+               arch/x86/isr_stubs.o \
+               arch/x86/context_switch.o
 
 # Other arch/x86 asm files from S1/S2 (paging_asm, gdt_flush, etc.)
-# excluding idt_asm.asm (duplicate) and the two already listed above
+# Excludes: idt_asm.asm (duplicate of idt_flush), and the three
+# explicit files above (idt_flush, isr_stubs, context_switch).
 ARCH_ASM_WILD = $(filter-out arch/x86/idt_asm.o, \
                   $(patsubst %.asm,%.o, \
-                    $(filter-out arch/x86/idt_flush.asm arch/x86/isr_stubs.asm, \
+                    $(filter-out arch/x86/idt_flush.asm \
+                                 arch/x86/isr_stubs.asm \
+                                 arch/x86/context_switch.asm, \
                       $(wildcard arch/x86/*.asm))))
 
 # ── boot asm ─────────────────────────────────────────────────────
@@ -79,8 +86,13 @@ iso: kernel.elf
 	echo '}'                                     >> isodir/boot/grub/grub.cfg
 	grub-mkrescue -o MiniOS.iso isodir
 
+# -cpu host        : use host CPU features for better emulation speed
+# -smp 1           : limit QEMU to one virtual CPU
+# -m 64M           : cap guest RAM at 64 MB
+# Together these prevent QEMU from consuming 100% of a host core
+# when running infinite task loops.
 run: MiniOS.iso
-	qemu-system-i386 -cdrom MiniOS.iso -serial stdio
+	qemu-system-i386 -cdrom MiniOS.iso -serial stdio -cpu qemu32 -smp 1 -m 64M
 
 debug: MiniOS.iso
 	qemu-system-i386 -cdrom MiniOS.iso -serial stdio -s -S
