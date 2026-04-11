@@ -8,23 +8,55 @@ LD      = i686-elf-ld
 CFLAGS  = -m32 -ffreestanding -fno-stack-protector -fno-builtin \
           -nostdlib -nostdinc -Wall -Wextra -Iinclude \
           -I/home/raunak/opt/cross/lib/gcc/i686-elf/13.2.0/include \
-		  -g
+          -g
 ASFLAGS = -f elf32 -g
 LDFLAGS = -T linker.ld -nostdlib
 
-# Source files
-C_SOURCES   = $(wildcard kernel/*.c) \
-              $(wildcard mm/*.c) \
-              $(wildcard scheduler/*.c) \
-              $(wildcard arch/x86/*.c)
+# ── kernel / mm / scheduler: wildcards safe here (no conflicts) ──
+C_SOURCES_WILD = $(wildcard kernel/*.c) \
+                 $(wildcard mm/*.c) \
+                 $(wildcard scheduler/*.c)
 
-ASM_SOURCES = $(wildcard boot/*.asm) \
-              $(wildcard arch/x86/*.asm)
+# ── arch/x86 C files: explicit list ──────────────────────────────
+#
+#   EXCLUDED from build (kept on disk for Git history):
+#     idt_minimal.c  — duplicate idt_entries[256], idt.c is superset
+#
+ARCH_C_OBJ = arch/x86/gdt.o \
+             arch/x86/paging.o \
+             arch/x86/isr_handler.o \
+             arch/x86/isr14.o \
+             arch/x86/idt.o \
+             arch/x86/isr.o \
+             arch/x86/pic.o \
+             arch/x86/pit.o
 
-# Object files
-OBJ = $(C_SOURCES:.c=.o) $(ASM_SOURCES:.asm=.o)
+# ── arch/x86 ASM files: explicit list ────────────────────────────
+#
+#   EXCLUDED from build (kept on disk for Git history):
+#     idt_asm.asm    — duplicate idt_flush symbol, idt_flush.asm is identical
+#
+ARCH_ASM_OBJ = arch/x86/idt_flush.o \
+               arch/x86/isr_stubs.o
 
-# Targets
+# Other arch/x86 asm files from S1/S2 (paging_asm, gdt_flush, etc.)
+# excluding idt_asm.asm (duplicate) and the two already listed above
+ARCH_ASM_WILD = $(filter-out arch/x86/idt_asm.o, \
+                  $(patsubst %.asm,%.o, \
+                    $(filter-out arch/x86/idt_flush.asm arch/x86/isr_stubs.asm, \
+                      $(wildcard arch/x86/*.asm))))
+
+# ── boot asm ─────────────────────────────────────────────────────
+BOOT_ASM_OBJ = $(patsubst %.asm,%.o,$(wildcard boot/*.asm))
+
+# ── Final OBJ list ───────────────────────────────────────────────
+OBJ = $(patsubst %.c,%.o,$(C_SOURCES_WILD)) \
+      $(ARCH_C_OBJ) \
+      $(ARCH_ASM_OBJ) \
+      $(ARCH_ASM_WILD) \
+      $(BOOT_ASM_OBJ)
+
+# ── Targets ──────────────────────────────────────────────────────
 all: kernel.elf
 
 kernel.elf: $(OBJ)
@@ -53,9 +85,10 @@ run: MiniOS.iso
 debug: MiniOS.iso
 	qemu-system-i386 -cdrom MiniOS.iso -serial stdio -s -S
 
+gdb-debug: kernel.elf
+	qemu-system-i386 -kernel kernel.elf -serial stdio -display none -m 64M -s -S
+
 clean:
 	rm -rf $(OBJ) kernel.elf isodir MiniOS.iso
 
-.PHONY: all iso run debug clean
-gdb-debug: kernel.elf
-	qemu-system-i386 -kernel kernel.elf -serial stdio -display none -m 64M -s -S
+.PHONY: all iso run debug gdb-debug clean

@@ -1,50 +1,54 @@
 /*
  * kernel/kernel_main.c
- * Main kernel entry point — Sprint 1 + Sprint 2 merged.
+ * Main kernel entry point — Sprint 1 + Sprint 2 + Sprint 3 merged.
  *
  * Implements:
  *   S1 : REQ-MEM-01 (GDT), REQ-MEM-03 (physical allocator)
  *   S2 : REQ-MEM-02, REQ-MEM-04, REQ-MEM-05 (paging + heap)
+ *   S3 : REQ-TASK-01 (IDT), REQ-TASK-02 (PIC + PIT + IRQ handlers)
  *
  * Authors:
- *   Shardul Diwate  (B24CS1028) — boot scaffolding (S0)
+ *   Shardul Diwate  (B24CS1028) — boot scaffolding (S0), build (S6)
  *   Aman Yadav      (B24CS1006) — memory subsystem calls (S1, S2)
+ *   Raunak Kumar    (B24CS1062) — interrupt infrastructure (S3)
  *
  * Call order (critical — DO NOT reorder):
  *   1.  serial_init()                   S0 : COM1 logger
  *   2.  vga_init()                      S0 : VGA text driver
  *   3.  gdt_init()                      S1 : stable segment descriptors
  *   4.  mm_init()                       S1 : bitmap allocator from mmap
- *   5.  isr_handlers_init()             S2 : register ISR 13 + ISR 14
- *   6.  idt_load_minimal()              S2 : load minimal IDT (ISR 14)
- *   7.  paging_create_directory()       S2 : alloc kernel page directory
- *   8.  paging_identity_map_first4mb()  S2 : must be before paging_enable
- *   9.  paging_map_kernel()             S2 : higher-half kernel mapping
- *  10.  paging_map_heap()               S2 : map heap region
- *  11.  paging_load_directory()         S2 : load CR3
- *  12.  paging_enable()                 S2 : set CR0.PG  ← PAGING ON
- *  13.  mm_heap_init()                  S2 : initialise heap free list
- *  14.  test_s2()                       S2 : verification tests
+ *   5.  paging_create_directory()       S2 : alloc kernel page directory
+ *   6.  paging_identity_map_first4mb()  S2 : must be before paging_enable
+ *   7.  paging_map_kernel()             S2 : higher-half kernel mapping
+ *   8.  paging_map_heap()               S2 : map heap region
+ *   9.  paging_load_directory()         S2 : load CR3
+ *  10.  paging_enable()                 S2 : set CR0.PG  ← PAGING ON
+ *  11.  mm_heap_init()                  S2 : initialise heap free list
+ *  12.  idt_init()                      S3 : build + load 256-entry IDT
+ *  13.  pic_remap()                     S3 : remap IRQs to 0x20-0x2F
+ *  14.  pit_init()                      S3 : PIT channel 0 at 100 Hz
+ *  15.  isr_install()                   S3 : confirm C handlers active
+ *  16.  STI                             S3 : enable interrupts
+ *  17.  test_s2()                       S2 : heap/paging verification
+ *  18.  test_s3()                       S3 : interrupt verification
  *
- * NOTE: The S1 frame self-test (alloc/free 3 frames) is preserved
- *       as a lightweight sanity check that runs before paging is on,
- *       then S2 picks up from step 5 onward.
+ * NOTE: The S2 minimal IDT (idt_load_minimal / isr_handlers_init) is
+ *       fully replaced by S3's 256-entry IDT.  Remove idt_minimal.c
+ *       from your Makefile OBJS — keeping both causes a linker error.
  */
 
 #include <stdint.h>
 #include "vga.h"           /* S0 */
 #include "serial.h"        /* S0 */
 #include "gdt.h"           /* S1: REQ-MEM-01 */
-#include "mm_phys.h"       /* S1: REQ-MEM-03  — mm_init / mm_alloc_frame / mm_free_frame */
+#include "mm_phys.h"       /* S1: REQ-MEM-03 — mm_init / mm_alloc_frame / mm_free_frame */
 #include "multiboot.h"     /* S1: multiboot_info_t */
 #include "mm_heap.h"       /* S2: REQ-MEM-04 — mm_heap_init / kmalloc / kfree / mm_heap_dump */
 #include "paging.h"        /* S2: REQ-MEM-02 — page_dir_t / paging_* helpers */
-
-/* ------------------------------------------------------------------ */
-/* External symbols                                                    */
-/* ------------------------------------------------------------------ */
-extern void idt_load_minimal(void);   /* arch/x86/idt_minimal.c  (S2) */
-extern void isr_handlers_init(void);  /* arch/x86/isr.c          (S2) */
+#include "idt.h"           /* S3: REQ-TASK-01 — idt_init / idt_set_gate */
+#include "isr.h"           /* S3: REQ-TASK-01, REQ-TASK-02 — isr_install / handlers */
+#include "pic.h"           /* S3: REQ-TASK-02 — pic_remap / pic_send_eoi */
+#include "pit.h"           /* S3: REQ-TASK-02 — pit_init / pit_get_ticks */
 
 /* Multiboot magic number that GRUB puts in EAX */
 #define MULTIBOOT_MAGIC 0x2BADB002
@@ -52,11 +56,6 @@ extern void isr_handlers_init(void);  /* arch/x86/isr.c          (S2) */
 /* ------------------------------------------------------------------ */
 /* Heap mapping helper                                      (S2)       */
 /* ------------------------------------------------------------------ */
-/*
- * paging_map_kernel() maps virt 0xC0000000–0xC03FFFFF (4 MB kernel).
- * The heap lives at 0xC0400000 for 4 MB and must be mapped separately
- * with the same supervisor-only, read-write flags.
- */
 static void paging_map_heap(page_dir_t *dir)
 {
     serial_puts("[KERNEL] Mapping heap region 0xC0400000-0xC07FFFFF...\n");
@@ -64,7 +63,7 @@ static void paging_map_heap(page_dir_t *dir)
     uint32_t virt = 0xC0400000;
     uint32_t phys = 0x00500000;   /* physical memory after kernel + identity */
 
-    /* 4 MB = 1024 pages × 4 KB */
+    /* 4 MB = 1024 pages x 4 KB */
     for (uint32_t i = 0; i < 1024; i++) {
         paging_map_page(dir, virt, phys, PAGE_RW);   /* supervisor-only */
         virt += 0x1000;
@@ -139,19 +138,8 @@ static void test_s2(void)
     /* ---- Test 6: heap dump ---- */
     mm_heap_dump();
 
-    /* ---- Test 7: intentional page-fault (disabled by default) ----
-     *
-     * Uncomment to verify ISR 14 fires correctly.
-     * The kernel will halt after printing the fault details.
-     *
-     *   serial_puts("[TEST 7] Triggering intentional page fault...\n");
-     *   volatile uint32_t *bad = (uint32_t *)0xDEAD0000;
-     *   uint32_t val = *bad;
-     *   (void)val;
-     */
-
-    /* ---- Test 8: paging_create / free_directory (EXT-SW-01) ---- */
-    serial_puts("[TEST 8] paging_create/free_directory (EXT-SW-01)...\n");
+    /* ---- Test 7: paging_create / free_directory (EXT-SW-01) ---- */
+    serial_puts("[TEST 7] paging_create/free_directory (EXT-SW-01)...\n");
     page_dir_t *task_dir = paging_create_directory();
     if (task_dir) {
         serial_printf("  Created task PD @ phys 0x%x\n", (uint32_t)task_dir);
@@ -166,19 +154,103 @@ static void test_s2(void)
     serial_puts("==============================\n\n");
 }
 
+/* ------------------------------------------------------------------ */
+/* Sprint-3 verification tests                              (S3)       */
+/* ------------------------------------------------------------------ */
+static void test_s3(void)
+{
+    serial_puts("\n==============================\n");
+    serial_puts("  S3 VERIFICATION TESTS\n");
+    serial_puts("==============================\n");
+
+    /* ---- Test 1: divide-by-zero → ISR 0 fires ----
+     *
+     * DISABLED by default. To test:
+     *   1. Uncomment the three lines below.
+     *   2. Run QEMU and watch serial output.
+     *   3. You should see: [ISR] Exception 0x0 (Divide-by-Zero)
+     *      followed by "KERNEL PANIC: Divide-by-Zero" and a halt.
+     *   4. Re-comment before continuing to S4.
+     */
+    /*
+    serial_puts("[TEST S3-1] Triggering divide-by-zero (ISR 0)...\n");
+    volatile int x = 1, y = 0;
+    volatile int z = x / y;
+    (void)z;
+    */
+
+    /* ---- Test 2: tick counter — watch PIT firing at 100 Hz ---- */
+    serial_puts("[TEST S3-2] Tick counter check (busy-wait ~1 second)...\n");
+
+    /*
+     * Spin for approximately 1 second worth of ticks.
+     * We cannot use a real sleep yet (no scheduler), so we watch the
+     * tick counter increment.  At 100 Hz, 100 ticks = 1 second.
+     *
+     * This busy-wait relies on the fact that:
+     *   - STI has already been called
+     *   - IRQ0 fires every 10 ms and increments pit_tick_count
+     *   - HLT releases the CPU until the next interrupt
+     */
+    uint32_t start = pit_get_ticks();
+    uint32_t target = start + 100;          /* wait for 100 ticks = ~1 s */
+
+    while (pit_get_ticks() < target) {
+        __asm__ volatile ("hlt");           /* sleep until next IRQ */
+    }
+
+    uint32_t elapsed = pit_get_ticks() - start;
+    serial_printf("  Ticks elapsed: %d (expected ~100)\n", elapsed);
+
+    if (elapsed >= 95 && elapsed <= 105) {
+        serial_puts("  PASS: PIT firing at ~100Hz\n");
+    } else {
+        serial_puts("  WARN: tick count outside expected range — "
+                    "check PIT divisor or IRQ0 handler\n");
+    }
+
+    /* ---- Test 3: 10-second stability check (NFR-PERF-02) ----
+     *
+     * SRS NFR-PERF-02 requires ~1000 ticks over 10 seconds.
+     * DISABLED by default because it adds 10 s to boot time.
+     * Uncomment for final NFR validation in S5.
+     */
+    /*
+    serial_puts("[TEST S3-3] 10s stability check (NFR-PERF-02)...\n");
+    uint32_t t0 = pit_get_ticks();
+    uint32_t t1 = t0 + 1000;
+    while (pit_get_ticks() < t1) {
+        __asm__ volatile ("hlt");
+    }
+    uint32_t got = pit_get_ticks() - t0;
+    serial_printf("  Ticks in 10s: %d (expected ~1000)\n", got);
+    if (got >= 950 && got <= 1050)
+        serial_puts("  PASS: NFR-PERF-02 satisfied\n");
+    else
+        serial_puts("  FAIL: NFR-PERF-02 out of range\n");
+    */
+
+    /* ---- Test 4: GPF handler (ISR 13) ----
+     *
+     * DISABLED by default — triggers a deliberate GPF.
+     * Uncomment to verify ISR 13 logs error_code + eip then halts.
+     * You should see: [ISR] #GP error_code=... eip=...
+     */
+    // FIXED — use // comments inside the asm block:
+    // 
+    // __asm__ volatile (
+    //     "mov $0x0, %ax \n"
+    //     "mov %ax, %ds  \n"   // load null selector → #GP
+    // );
+    // 
+    serial_puts("==============================\n");
+    serial_puts("  S3 TESTS COMPLETE\n");
+    serial_puts("==============================\n\n");
+}
+
 /* ================================================================== */
 /*  kernel_main                                                        */
 /* ================================================================== */
-/*
- * Parameter order matches what boot.asm pushes on the stack:
- *   push ebx   (multiboot info pointer — second push)
- *   push eax   (magic number          — first push)
- * so C sees: kernel_main(magic, mb_info)  ← correct order.
- *
- * mb_info is the raw physical address GRUB put in EBX.
- * We cast it to multiboot_info_t* once the magic check passes.
- * It must be used as a physical pointer BEFORE paging is enabled.
- */
 void kernel_main(uint32_t magic, uint32_t mb_info)
 {
     /* ── S0: early I/O ──────────────────────────────────────────── */
@@ -188,7 +260,6 @@ void kernel_main(uint32_t magic, uint32_t mb_info)
     vga_init();
     serial_puts("[BOOT] VGA driver initialized\n");
 
-    /* Verify multiboot magic before touching the mb_info pointer */
     if (magic != MULTIBOOT_MAGIC) {
         vga_set_color(VGA_COLOR_RED, VGA_COLOR_BLACK);
         vga_puts("ERROR: Invalid Multiboot magic number!\n");
@@ -196,15 +267,10 @@ void kernel_main(uint32_t magic, uint32_t mb_info)
         goto hang;
     }
 
-    serial_puts("\n[KERNEL] MiniOS — Sprint 1 + Sprint 2\n");
+    serial_puts("\n[KERNEL] MiniOS — Sprint 1 + Sprint 2 + Sprint 3\n");
     serial_printf("[KERNEL] Multiboot magic: 0x%x\n", magic);
 
     /* ── S1: GDT ────────────────────────────────────────────────── */
-    /*
-     * Must come first. CPU segment registers still hold whatever GRUB
-     * left — gdt_init() loads our 3-entry flat GDT and flushes all
-     * segment registers (CS via far-jump, DS/ES/FS/GS/SS directly).
-     */
     serial_puts("[KERNEL] Initialising GDT...\n");
     gdt_init();
     vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
@@ -212,12 +278,6 @@ void kernel_main(uint32_t magic, uint32_t mb_info)
     serial_puts("[S1]  GDT initialized\n");
 
     /* ── S1: Physical memory allocator ─────────────────────────── */
-    /*
-     * Cast mb_info to multiboot_info_t* — still the physical address
-     * GRUB put in EBX.  mm_init() walks mbi->mmap_addr to find usable
-     * RAM and builds our 4-KB-frame bitmap.
-     * Must happen before paging (S2) because the pointer is physical.
-     */
     multiboot_info_t *mbi = (multiboot_info_t *)mb_info;
     serial_puts("[KERNEL] Initialising physical memory manager...\n");
     mm_init(mbi);
@@ -225,11 +285,6 @@ void kernel_main(uint32_t magic, uint32_t mb_info)
     serial_puts("[S1]  mm_init() complete\n");
 
     /* ── S1: Frame self-test ────────────────────────────────────── */
-    /*
-     * Alloc and immediately free 3 frames as a lightweight sanity
-     * check.  Runs before paging is on so the addresses are physical.
-     * Safe to leave in; the frames are returned to the free pool.
-     */
     uint32_t f1 = mm_alloc_frame();
     uint32_t f2 = mm_alloc_frame();
     uint32_t f3 = mm_alloc_frame();
@@ -242,68 +297,66 @@ void kernel_main(uint32_t magic, uint32_t mb_info)
     mm_free_frame(f3);
     serial_puts("[S1]  test free: OK\n");
 
-    /* ── S2: ISR handler table ──────────────────────────────────── */
-    /*
-     * Register stub handlers for ISR 13 (GPF) and ISR 14 (#PF).
-     * Must be done before idt_load_minimal() installs the IDT gate,
-     * and certainly before paging_enable() could trigger a #PF.
-     */
-    isr_handlers_init();
-
-    /* ── S2: Minimal IDT ────────────────────────────────────────── */
-    /*
-     * Load a minimal IDT containing at least ISR 14 so a page fault
-     * during paging bring-up doesn't triple-fault the CPU.
-     * Full 256-entry IDT is Raunak's S3 work.
-     */
-    serial_puts("[KERNEL] Loading minimal IDT (ISR 13, ISR 14)...\n");
-    idt_load_minimal();
-    serial_puts("[KERNEL] IDT loaded.\n");
-
     /* ── S2: Paging setup ───────────────────────────────────────── */
     serial_puts("[KERNEL] Setting up paging...\n");
 
-    /* Allocate the kernel page directory */
     page_dir_t *kernel_dir = paging_create_directory();
     if (!kernel_dir) {
         serial_puts("[KERNEL] FATAL: could not allocate page directory\n");
         goto hang;
     }
 
-    /* 1. Identity-map first 4 MB (required before CR0.PG is set so
-     *    that the next instruction after paging_enable() still maps
-     *    to the same physical address we are currently executing). */
     paging_identity_map_first4mb(kernel_dir);
-
-    /* 2. Map kernel to higher half: virt 0xC0000000 → phys 0x00100000 */
     paging_map_kernel(kernel_dir);
-
-    /* 3. Map heap region: virt 0xC0400000 → phys 0x00500000 (4 MB) */
     paging_map_heap(kernel_dir);
-
-    /* 4. Load CR3 with the physical address of our page directory */
     paging_load_directory((uint32_t)kernel_dir);
-
-    /* 5. Enable paging — CR0.PG set — all accesses now translated */
     paging_enable();
 
     vga_puts("[OK] Paging enabled\n");
     serial_puts("[KERNEL] Paging ENABLED.\n");
 
     /* ── S2: Kernel heap ────────────────────────────────────────── */
-    /*
-     * mm_heap_init() MUST be called AFTER paging_enable() because
-     * the heap base pointer (0xC0400000) is a virtual address that
-     * only exists once the heap pages are mapped and paging is on.
-     */
     mm_heap_init();
     vga_puts("[OK] Kernel heap initialized\n");
     serial_puts("[S2]  mm_heap_init() complete\n");
 
+    /* ── S3: Full IDT ───────────────────────────────────────────── */
+    /*
+     * S2's idt_load_minimal() + isr_handlers_init() are GONE.
+     * S3 replaces them with a proper 256-entry IDT.
+     * idt_init() wires all 32 exception stubs + 16 IRQ stubs and
+     * calls LIDT.  Must happen before pic_remap() because the IDT
+     * must be in place before we unmask IRQs.
+     */
+    idt_init();
+    vga_puts("[OK] IDT loaded (256 gates)\n");
+    serial_puts("[S3]  IDT loaded (256 gates)\n");
+
+    /* ── S3: PIC remap ──────────────────────────────────────────── */
+    /*
+     * Without this, IRQ0 fires on vector 8 (#DF Double Fault) and
+     * IRQ1 on vector 9, etc.  Must be done BEFORE STI.
+     */
+    pic_remap();
+    vga_puts("[OK] PIC remapped (master=0x20, slave=0x28)\n");
+    serial_puts("[S3]  PIC remapped: master=0x20 slave=0x28\n");
+
+    /* ── S3: PIT ────────────────────────────────────────────────── */
+    pit_init();
+    vga_puts("[OK] PIT configured at 100Hz\n");
+    serial_puts("[S3]  PIT configured at 100Hz (divisor=11932)\n");
+
+    /* ── S3: ISR install + enable interrupts ────────────────────── */
+    isr_install();
+
+    __asm__ volatile ("sti");
+    vga_puts("[OK] Interrupts enabled (STI)\n");
+    serial_puts("[S3]  STI — interrupts enabled\n");
+
     /* ── Boot banner ────────────────────────────────────────────── */
     vga_set_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLACK);
     vga_puts("=======================================\n");
-    vga_puts("       MiniOS Kernel v0.2              \n");
+    vga_puts("       MiniOS Kernel v0.3              \n");
     vga_puts("       Group 31 | IIT Jodhpur          \n");
     vga_puts("=======================================\n");
     vga_set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
@@ -314,16 +367,19 @@ void kernel_main(uint32_t magic, uint32_t mb_info)
     vga_puts("[OK] Physical allocator ready\n");
     vga_puts("[OK] Paging enabled\n");
     vga_puts("[OK] Kernel heap initialized\n");
-    vga_puts("\nSprint 1 + Sprint 2 complete. Ready for S3.\n");
+    vga_puts("[OK] IDT loaded (256 gates)\n");
+    vga_puts("[OK] PIC remapped, PIT at 100Hz\n");
+    vga_puts("[OK] Interrupts enabled\n");
+    vga_puts("\nSprint 1 + Sprint 2 + Sprint 3 complete. Ready for S4.\n");
 
-    /* ── S2: Run verification tests ─────────────────────────────── */
+    /* ── Run verification tests ─────────────────────────────────── */
     test_s2();
+    test_s3();
 
-    /* ── Hand off to S3 (Raunak) ────────────────────────────────── */
-    serial_puts("[KERNEL] S2 complete. Ready for S3 (IDT + PIC + PIT).\n");
+    /* ── Hand off to S4 (Raunak) ────────────────────────────────── */
+    serial_puts("[KERNEL] S3 complete. Ready for S4 (TCB + scheduler).\n");
 
 hang:
-    /* Spin loop — scheduler takes over in S4 */
     while (1) {
         __asm__ volatile ("hlt");
     }
