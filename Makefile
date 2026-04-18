@@ -1,5 +1,7 @@
 # MiniOS Makefile
 # Group 31 | IIT Jodhpur
+# Updated for Sprint 5.
+# NOTE: s5_integration.c lives in kernel/ (not a separate integration/ dir).
 
 CC      = i686-elf-gcc
 AS      = nasm
@@ -12,12 +14,13 @@ CFLAGS  = -m32 -ffreestanding -fno-stack-protector -fno-builtin \
 ASFLAGS = -f elf32 -g
 LDFLAGS = -T linker.ld -nostdlib
 
-# ── kernel / mm / scheduler: wildcards safe here (no conflicts) ──
+# ── kernel / mm / scheduler: wildcards safe here ─────────────────────
+# s5_integration.c is in kernel/ — picked up by kernel/*.c below.
 C_SOURCES_WILD = $(wildcard kernel/*.c) \
                  $(wildcard mm/*.c) \
                  $(wildcard scheduler/*.c)
 
-# ── arch/x86 C files: explicit list ──────────────────────────────
+# ── arch/x86 C files: explicit list ─────────────────────────────────
 #
 #   EXCLUDED from build (kept on disk for Git history):
 #     idt_minimal.c  — duplicate idt_entries[256], idt.c is superset
@@ -31,10 +34,10 @@ ARCH_C_OBJ = arch/x86/gdt.o \
              arch/x86/pic.o \
              arch/x86/pit.o
 
-# ── arch/x86 ASM files: explicit list ────────────────────────────
+# ── arch/x86 ASM files: explicit list ───────────────────────────────
 #
 #   EXCLUDED from build (kept on disk for Git history):
-#     idt_asm.asm    — duplicate idt_flush symbol, idt_flush.asm is identical
+#     idt_asm.asm    — duplicate idt_flush symbol
 #
 #   S4: context_switch.asm added here (explicit) and excluded from
 #       ARCH_ASM_WILD below to prevent it being linked twice.
@@ -53,17 +56,17 @@ ARCH_ASM_WILD = $(filter-out arch/x86/idt_asm.o, \
                                  arch/x86/context_switch.asm, \
                       $(wildcard arch/x86/*.asm))))
 
-# ── boot asm ─────────────────────────────────────────────────────
+# ── boot asm ────────────────────────────────────────────────────────
 BOOT_ASM_OBJ = $(patsubst %.asm,%.o,$(wildcard boot/*.asm))
 
-# ── Final OBJ list ───────────────────────────────────────────────
+# ── Final OBJ list ───────────────────────────────────────────────────
 OBJ = $(patsubst %.c,%.o,$(C_SOURCES_WILD)) \
       $(ARCH_C_OBJ) \
       $(ARCH_ASM_OBJ) \
       $(ARCH_ASM_WILD) \
       $(BOOT_ASM_OBJ)
 
-# ── Targets ──────────────────────────────────────────────────────
+# ── Targets ──────────────────────────────────────────────────────────
 all: kernel.elf
 
 kernel.elf: $(OBJ)
@@ -86,11 +89,9 @@ iso: kernel.elf
 	echo '}'                                     >> isodir/boot/grub/grub.cfg
 	grub-mkrescue -o MiniOS.iso isodir
 
-# -cpu host        : use host CPU features for better emulation speed
-# -smp 1           : limit QEMU to one virtual CPU
-# -m 64M           : cap guest RAM at 64 MB
-# Together these prevent QEMU from consuming 100% of a host core
-# when running infinite task loops.
+# -cpu qemu32  : use host-compatible CPU features
+# -smp 1       : single virtual CPU (prevents SMP race conditions)
+# -m 64M       : cap guest RAM at 64 MB
 run: MiniOS.iso
 	qemu-system-i386 -cdrom MiniOS.iso -serial stdio -cpu qemu32 -smp 1 -m 64M
 

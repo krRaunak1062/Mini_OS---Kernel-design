@@ -1,0 +1,147 @@
+<svg viewBox="0 0 900 620" xmlns="http://www.w3.org/2000/svg" font-family="'Courier New', monospace">
+  <!-- Background -->
+  <rect width="900" height="620" fill="#0d1117"/>
+
+  <!-- Title -->
+  <text x="450" y="38" text-anchor="middle" font-size="18" font-weight="bold" fill="#58a6ff" letter-spacing="1">UML STATE MACHINE DIAGRAM — Task Lifecycle (REQ-TASK-03)</text>
+  <text x="450" y="58" text-anchor="middle" font-size="11" fill="#8b949e">MiniOS Group 31 | IIT Jodhpur | task_state_t in include/task.h</text>
+  <line x1="60" y1="68" x2="840" y2="68" stroke="#30363d" stroke-width="1"/>
+
+  <!-- === INITIAL PSEUDO-STATE === -->
+  <circle cx="130" cy="130" r="18" fill="#58a6ff"/>
+  <text x="130" y="168" text-anchor="middle" font-size="10" fill="#8b949e">task_create(fn)</text>
+
+  <!-- Arrow from initial to READY -->
+  <line x1="148" y1="130" x2="228" y2="130" stroke="#58a6ff" stroke-width="2" marker-end="url(#arr-blue)"/>
+  <text x="188" y="122" text-anchor="middle" font-size="9" fill="#58a6ff">TCB alloc</text>
+  <text x="188" y="134" text-anchor="middle" font-size="9" fill="#58a6ff">stack init</text>
+
+  <!-- === READY STATE === -->
+  <rect x="228" y="98" width="150" height="64" rx="10" fill="#161b22" stroke="#3fb950" stroke-width="2.5"/>
+  <text x="303" y="122" text-anchor="middle" font-size="13" font-weight="bold" fill="#3fb950">TASK_READY</text>
+  <text x="303" y="138" text-anchor="middle" font-size="10" fill="#8b949e">state = 0</text>
+  <text x="303" y="152" text-anchor="middle" font-size="9" fill="#6e7681">on ready queue</text>
+
+  <!-- READY → RUNNING -->
+  <path d="M 378 130 Q 420 70 490 130" stroke="#f0883e" stroke-width="2" fill="none" marker-end="url(#arr-orange)"/>
+  <text x="435" y="82" text-anchor="middle" font-size="9" fill="#f0883e">sched_next()</text>
+  <text x="435" y="94" text-anchor="middle" font-size="9" fill="#f0883e">context_switch()</text>
+  <text x="435" y="106" text-anchor="middle" font-size="9" fill="#6e7681">→ state = RUNNING</text>
+
+  <!-- === RUNNING STATE === -->
+  <rect x="490" y="98" width="170" height="64" rx="10" fill="#161b22" stroke="#f0883e" stroke-width="2.5"/>
+  <text x="575" y="122" text-anchor="middle" font-size="13" font-weight="bold" fill="#f0883e">TASK_RUNNING</text>
+  <text x="575" y="138" text-anchor="middle" font-size="10" fill="#8b949e">state = 1</text>
+  <text x="575" y="152" text-anchor="middle" font-size="9" fill="#6e7681">CPU executing task</text>
+
+  <!-- RUNNING → READY (preemption) -->
+  <path d="M 490 155 Q 420 215 378 155" stroke="#3fb950" stroke-width="2" fill="none" marker-end="url(#arr-green)"/>
+  <text x="432" y="194" text-anchor="middle" font-size="9" fill="#3fb950">IRQ0 tick (10ms)</text>
+  <text x="432" y="206" text-anchor="middle" font-size="9" fill="#3fb950">pit_irq0_handler()</text>
+  <text x="432" y="218" text-anchor="middle" font-size="9" fill="#6e7681">→ state = READY</text>
+
+  <!-- RUNNING → BLOCKED -->
+  <path d="M 660 130 L 740 130" stroke="#d2a8ff" stroke-width="2" fill="none" marker-end="url(#arr-purple)"/>
+  <text x="699" y="118" text-anchor="middle" font-size="9" fill="#d2a8ff">I/O wait</text>
+  <text x="699" y="130" text-anchor="middle" font-size="9" fill="#6e7681">(future use)</text>
+
+  <!-- === BLOCKED STATE === -->
+  <rect x="740" y="98" width="130" height="64" rx="10" fill="#161b22" stroke="#d2a8ff" stroke-width="1.5" stroke-dasharray="6,3"/>
+  <text x="805" y="122" text-anchor="middle" font-size="13" font-weight="bold" fill="#d2a8ff">TASK_BLOCKED</text>
+  <text x="805" y="138" text-anchor="middle" font-size="10" fill="#8b949e">state = 2</text>
+  <text x="805" y="152" text-anchor="middle" font-size="9" fill="#6e7681">waiting for event</text>
+
+  <!-- BLOCKED → READY -->
+  <path d="M 805 162 Q 805 280 303 280 Q 303 228 303 162" stroke="#d2a8ff" stroke-width="1.5" fill="none" stroke-dasharray="6,3" marker-end="url(#arr-purple)"/>
+  <text x="570" y="296" text-anchor="middle" font-size="9" fill="#d2a8ff">event unblocks</text>
+  <text x="570" y="308" text-anchor="middle" font-size="9" fill="#6e7681">→ state = READY</text>
+
+  <!-- RUNNING → TERMINATED -->
+  <path d="M 575 162 L 575 320" stroke="#f85149" stroke-width="2" fill="none" marker-end="url(#arr-red)"/>
+  <text x="630" y="240" text-anchor="middle" font-size="9" fill="#f85149">fn() returns</text>
+  <text x="630" y="252" text-anchor="middle" font-size="9" fill="#6e7681">(or explicit exit)</text>
+
+  <!-- === TERMINATED STATE === -->
+  <rect x="490" y="320" width="170" height="64" rx="10" fill="#161b22" stroke="#f85149" stroke-width="2.5"/>
+  <text x="575" y="344" text-anchor="middle" font-size="13" font-weight="bold" fill="#f85149">TASK_TERMINATED</text>
+  <text x="575" y="360" text-anchor="middle" font-size="10" fill="#8b949e">state = 3</text>
+  <text x="575" y="374" text-anchor="middle" font-size="9" fill="#6e7681">pending TCB reclaim</text>
+
+  <!-- TERMINATED → final -->
+  <path d="M 575 384 L 575 430" stroke="#f85149" stroke-width="2" fill="none" marker-end="url(#arr-red)"/>
+  <text x="638" y="420" text-anchor="middle" font-size="9" fill="#f85149">task_destroy()</text>
+  <text x="638" y="432" text-anchor="middle" font-size="9" fill="#6e7681">kfree(TCB + stack)</text>
+
+  <!-- Final state -->
+  <circle cx="575" cy="460" r="16" fill="none" stroke="#f85149" stroke-width="2"/>
+  <circle cx="575" cy="460" r="10" fill="#f85149"/>
+
+  <!-- ======= INTERNAL TRANSITIONS BOX ======= -->
+  <rect x="60" y="330" width="340" height="220" rx="8" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+  <text x="230" y="355" text-anchor="middle" font-size="12" font-weight="bold" fill="#58a6ff">Internal Transitions (RUNNING)</text>
+  <line x1="80" y1="362" x2="382" y2="362" stroke="#30363d" stroke-width="1"/>
+
+  <text x="90" y="382" font-size="10" fill="#3fb950">do / execute task_fn()</text>
+  <line x1="80" y1="390" x2="382" y2="390" stroke="#21262d" stroke-width="1"/>
+
+  <text x="90" y="408" font-size="10" fill="#8b949e">entry / CR3 ← page_dir</text>
+  <text x="90" y="422" font-size="10" fill="#8b949e">       DS/ES/FS/GS ← 0x10</text>
+  <text x="90" y="436" font-size="10" fill="#8b949e">       EFLAGS.IF ← 1 (via IRET)</text>
+  <line x1="80" y1="444" x2="382" y2="444" stroke="#21262d" stroke-width="1"/>
+
+  <text x="90" y="462" font-size="10" fill="#8b949e">exit  / pushad → kernel_esp saved</text>
+  <text x="90" y="476" font-size="10" fill="#8b949e">       old ESP → TCB.kernel_esp</text>
+  <text x="90" y="490" font-size="10" fill="#8b949e">       state ← READY</text>
+  <line x1="80" y1="498" x2="382" y2="498" stroke="#21262d" stroke-width="1"/>
+
+  <text x="90" y="516" font-size="10" fill="#f85149">guard [fn returns] / state ← TERMINATED</text>
+  <text x="90" y="532" font-size="10" fill="#6e7681">guard [tick] / sched_switch() called</text>
+
+  <!-- ======= BOOT_TCB NOTE ======= -->
+  <rect x="60" y="98" width="150" height="80" rx="6" fill="#161b22" stroke="#30363d" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="135" y="118" text-anchor="middle" font-size="10" font-weight="bold" fill="#8b949e">boot_tcb (bootstrap)</text>
+  <text x="135" y="132" text-anchor="middle" font-size="9" fill="#6e7681">state = TERMINATED</text>
+  <text x="135" y="146" text-anchor="middle" font-size="9" fill="#6e7681">kernel_esp = 0</text>
+  <text x="135" y="160" text-anchor="middle" font-size="9" fill="#6e7681">discarded after</text>
+  <text x="135" y="172" text-anchor="middle" font-size="9" fill="#6e7681">sched_start()</text>
+
+  <!-- arrow to boot_tcb -->
+  <path d="M 130 148 L 130 165" stroke="#30363d" stroke-width="1" stroke-dasharray="3,3"/>
+
+  <!-- sched_start label -->
+  <text x="450" y="550" text-anchor="middle" font-size="10" fill="#6e7681">sched_start() bootstraps via boot_tcb (pid=0, state=TERMINATED) — context saved there, never restored</text>
+
+  <!-- Arrows definitions -->
+  <defs>
+    <marker id="arr-blue" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#58a6ff"/>
+    </marker>
+    <marker id="arr-orange" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#f0883e"/>
+    </marker>
+    <marker id="arr-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#3fb950"/>
+    </marker>
+    <marker id="arr-purple" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#d2a8ff"/>
+    </marker>
+    <marker id="arr-red" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#f85149"/>
+    </marker>
+  </defs>
+
+  <!-- Legend -->
+  <rect x="740" y="320" width="130" height="110" rx="6" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <text x="805" y="338" text-anchor="middle" font-size="10" font-weight="bold" fill="#8b949e">Legend</text>
+  <circle cx="756" cy="355" r="6" fill="#58a6ff"/>
+  <text x="768" y="359" font-size="9" fill="#8b949e">Initial state</text>
+  <rect x="750" y="368" width="12" height="8" rx="2" fill="none" stroke="#3fb950" stroke-width="1.5"/>
+  <text x="768" y="378" font-size="9" fill="#8b949e">READY</text>
+  <rect x="750" y="385" width="12" height="8" rx="2" fill="none" stroke="#f0883e" stroke-width="1.5"/>
+  <text x="768" y="395" font-size="9" fill="#8b949e">RUNNING</text>
+  <rect x="750" y="402" width="12" height="8" rx="2" fill="none" stroke="#d2a8ff" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <text x="768" y="412" font-size="9" fill="#8b949e">BLOCKED (future)</text>
+  <circle cx="756" cy="422" r="5" fill="none" stroke="#f85149" stroke-width="1.5"/>
+  <circle cx="756" cy="422" r="3" fill="#f85149"/>
+  <text x="768" y="426" font-size="9" fill="#8b949e">Final state</text>
+</svg>

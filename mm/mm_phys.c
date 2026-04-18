@@ -113,7 +113,30 @@ void mm_init(multiboot_info_t *mbi)
     for (uint32_t a = ks; a < ke; a += PAGE_SIZE)
         mm_set_frame(a);
 
-    serial_log("[mm_init] ready. Kernel: 0x%x – 0x%x\n", ks, ke);
+    serial_log("[mm_init] ready. Kernel: 0x%x -- 0x%x\n", ks, ke);
+
+    /*
+     * BUG FIX (Bug 1): Reserve heap physical backing region.
+     *
+     * kernel_main.c maps virt 0xC0400000-0xC07FFFFF -> phys 0x00500000-0x008FFFFF
+     * via paging_map_heap().  The GRUB memory map marks this physical region as
+     * AVAILABLE, so mm_init() freed those frames above.
+     *
+     * Without this reservation, mm_alloc_frame() can return any frame from
+     * 0x500000-0x8FFFFF, which physically overlaps the heap backing pages.
+     * Any page-table or TCB allocated from that range will silently overwrite
+     * live heap data, corrupting kmalloc free-lists and task stacks.
+     *
+     * Fix: mark all heap backing frames as allocated so mm_alloc_frame()
+     * will never hand them out.
+     *
+     * Range: phys 0x00500000 - 0x008FFFFF  (4 MB, 1024 frames)
+     * Must match the phys range in paging_map_heap() in kernel_main.c.
+     */
+    for (uint32_t a = 0x00500000; a < 0x00900000; a += PAGE_SIZE)
+        mm_set_frame(a);
+
+    serial_log("[mm_init] Heap phys 0x500000-0x8FFFFF reserved in bitmap\n");
 }
 
 /* ── mm_alloc_frame ──────────────────────────────────── */

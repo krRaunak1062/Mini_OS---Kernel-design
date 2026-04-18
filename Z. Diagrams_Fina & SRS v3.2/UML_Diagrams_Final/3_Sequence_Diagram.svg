@@ -1,0 +1,178 @@
+<svg viewBox="0 0 1100 820" xmlns="http://www.w3.org/2000/svg" font-family="'Courier New', monospace">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#475569"/>
+    </marker>
+    <marker id="ret" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b"/>
+    </marker>
+    <filter id="shadow">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#00000050"/>
+    </filter>
+  </defs>
+
+  <rect width="1100" height="820" fill="#0f172a"/>
+  <rect x="0" y="0" width="1100" height="42" fill="#1e293b"/>
+  <text x="550" y="27" text-anchor="middle" font-size="15" font-weight="bold" fill="#e2e8f0" letter-spacing="2">SEQUENCE DIAGRAM — Task Creation &amp; Scheduler Bootstrap</text>
+  <text x="550" y="39" text-anchor="middle" font-size="9" fill="#64748b">MiniOS Group 31 | IIT Jodhpur | REQ-TASK-03,04,05 | kernel_main.c 22-step init sequence</text>
+
+  <!-- Lifeline headers -->
+  <!-- kernel_main -->
+  <rect x="30" y="55" width="120" height="40" rx="4" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="90" y="70" text-anchor="middle" font-size="10" font-weight="bold" fill="#bfdbfe">kernel_main</text>
+  <text x="90" y="83" text-anchor="middle" font-size="8" fill="#60a5fa">kernel_main.c</text>
+
+  <!-- task_manager / task.c -->
+  <rect x="200" y="55" width="120" height="40" rx="4" fill="#3b1f5e" stroke="#a855f7" stroke-width="2" filter="url(#shadow)"/>
+  <text x="260" y="70" text-anchor="middle" font-size="10" font-weight="bold" fill="#f3e8ff">task_create()</text>
+  <text x="260" y="83" text-anchor="middle" font-size="8" fill="#c084fc">scheduler/task.c</text>
+
+  <!-- physical mm -->
+  <rect x="370" y="55" width="120" height="40" rx="4" fill="#14532d" stroke="#22c55e" stroke-width="2" filter="url(#shadow)"/>
+  <text x="430" y="70" text-anchor="middle" font-size="10" font-weight="bold" fill="#dcfce7">kmalloc()</text>
+  <text x="430" y="83" text-anchor="middle" font-size="8" fill="#86efac">mm/heap.c</text>
+
+  <!-- virtual mm / paging -->
+  <rect x="540" y="55" width="130" height="40" rx="4" fill="#0c2a1a" stroke="#16a34a" stroke-width="2" filter="url(#shadow)"/>
+  <text x="605" y="70" text-anchor="middle" font-size="10" font-weight="bold" fill="#bbf7d0">paging</text>
+  <text x="605" y="83" text-anchor="middle" font-size="8" fill="#86efac">arch/x86/paging.c</text>
+
+  <!-- scheduler -->
+  <rect x="720" y="55" width="120" height="40" rx="4" fill="#1a0f40" stroke="#6366f1" stroke-width="2" filter="url(#shadow)"/>
+  <text x="780" y="70" text-anchor="middle" font-size="10" font-weight="bold" fill="#e0e7ff">scheduler</text>
+  <text x="780" y="83" text-anchor="middle" font-size="8" fill="#818cf8">scheduler/sched.c</text>
+
+  <!-- new TCB -->
+  <rect x="890" y="55" width="120" height="40" rx="4" fill="#2d1657" stroke="#9333ea" stroke-width="2" filter="url(#shadow)"/>
+  <text x="950" y="70" text-anchor="middle" font-size="10" font-weight="bold" fill="#f3e8ff">new TCB</text>
+  <text x="950" y="83" text-anchor="middle" font-size="8" fill="#d8b4fe">include/task.h</text>
+
+  <!-- Lifelines -->
+  <line x1="90" y1="95" x2="90" y2="790" stroke="#3b82f6" stroke-width="1" stroke-dasharray="6,3"/>
+  <line x1="260" y1="95" x2="260" y2="790" stroke="#a855f7" stroke-width="1" stroke-dasharray="6,3"/>
+  <line x1="430" y1="95" x2="430" y2="790" stroke="#22c55e" stroke-width="1" stroke-dasharray="6,3"/>
+  <line x1="605" y1="95" x2="605" y2="790" stroke="#16a34a" stroke-width="1" stroke-dasharray="6,3"/>
+  <line x1="780" y1="95" x2="780" y2="790" stroke="#6366f1" stroke-width="1" stroke-dasharray="6,3"/>
+  <line x1="950" y1="95" x2="950" y2="790" stroke="#9333ea" stroke-width="1" stroke-dasharray="6,3"/>
+
+  <!-- ======== PHASE 1: BOOT (steps 1-10 condensed) ======== -->
+  <rect x="15" y="108" width="1070" height="22" rx="3" fill="#1e3a5f" opacity="0.5"/>
+  <text x="30" y="123" font-size="10" font-weight="bold" fill="#60a5fa">PHASE 1 — Boot Init (steps 1–10): serial_init → vga_init → gdt_init → mm_init → paging → heap</text>
+
+  <!-- Step 1-10 shown as one combined bar -->
+  <rect x="80" y="130" width="20" height="60" fill="#1d4ed8" rx="2"/>
+  <line x1="100" y1="148" x2="420" y2="148" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="255" y="142" text-anchor="middle" font-size="9" fill="#93c5fd">mm_init(mbi) → bitmap allocator</text>
+  <line x1="420" y1="155" x2="100" y2="155" stroke="#334155" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#ret)"/>
+  <text x="255" y="168" text-anchor="middle" font-size="9" fill="#64748b">return</text>
+
+  <line x1="100" y1="175" x2="590" y2="175" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="340" y="169" text-anchor="middle" font-size="9" fill="#86efac">paging_create_directory() → identity map → map kernel → enable</text>
+  <line x1="590" y1="183" x2="100" y2="183" stroke="#334155" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#ret)"/>
+
+  <!-- ======== PHASE 2: S3 interrupt setup ======== -->
+  <rect x="15" y="200" width="1070" height="22" rx="3" fill="#1e1b4b" opacity="0.5"/>
+  <text x="30" y="215" font-size="10" font-weight="bold" fill="#818cf8">PHASE 2 — S3 Interrupt Setup (steps 12–15): idt_init → pic_remap → pit_init → isr_install → STI</text>
+
+  <rect x="80" y="222" width="20" height="30" fill="#312e81" rx="2"/>
+  <text x="255" y="238" text-anchor="middle" font-size="9" fill="#a5b4fc">idt_init() | pic_remap() | pit_init() | isr_install() → STI</text>
+  <line x1="100" y1="236" x2="590" y2="236" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="590" y1="243" x2="100" y2="243" stroke="#334155" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#ret)"/>
+
+  <!-- ======== PHASE 3: S5 Tests ======== -->
+  <rect x="15" y="262" width="1070" height="22" rx="3" fill="#14532d" opacity="0.4"/>
+  <text x="30" y="277" font-size="10" font-weight="bold" fill="#4ade80">PHASE 3 — S5 NFR Tests (step 17): s5_run_all_tests() — current_task=NULL so sched_switch() is no-op during tests</text>
+
+  <rect x="80" y="284" width="20" height="30" fill="#15803d" rx="2"/>
+  <line x1="100" y1="295" x2="590" y2="295" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="340" y="289" text-anchor="middle" font-size="9" fill="#86efac">s5_run_all_tests() — 14 tests, ~12 seconds</text>
+  <line x1="590" y1="303" x2="100" y2="303" stroke="#334155" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#ret)"/>
+  <text x="340" y="316" text-anchor="middle" font-size="9" fill="#22c55e">ALL PASS → s5_print_vga_summary() → CLI</text>
+
+  <!-- ======== PHASE 4: task_create x3 ======== -->
+  <rect x="15" y="330" width="1070" height="22" rx="3" fill="#2d1657" opacity="0.5"/>
+  <text x="30" y="345" font-size="10" font-weight="bold" fill="#c084fc">PHASE 4 — S4 Scheduler Init + task_create x3 (steps 18–21)</text>
+
+  <rect x="80" y="352" width="20" height="240" fill="#312e81" rx="2"/>
+
+  <!-- sched_init -->
+  <line x1="100" y1="365" x2="770" y2="365" stroke="#a855f7" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="430" y="359" text-anchor="middle" font-size="9" fill="#c084fc">sched_init() — zero queue, current_task=NULL</text>
+  <line x1="770" y1="373" x2="100" y2="373" stroke="#334155" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#ret)"/>
+
+  <!-- task_create(task_a) -->
+  <rect x="250" y="384" width="20" height="80" fill="#7e22ce" rx="2"/>
+  <line x1="100" y1="396" x2="250" y2="396" stroke="#a855f7" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="175" y="390" text-anchor="middle" font-size="9" fill="#c084fc">task_create(task_a)</text>
+
+  <!-- kmalloc TCB -->
+  <line x1="270" y1="410" x2="420" y2="410" stroke="#a855f7" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="345" y="404" text-anchor="middle" font-size="9" fill="#86efac">kmalloc(sizeof(tcb_t))</text>
+  <line x1="420" y1="418" x2="270" y2="418" stroke="#334155" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#ret)"/>
+  <text x="345" y="430" text-anchor="middle" font-size="9" fill="#64748b">→ TCB ptr</text>
+
+  <!-- kmalloc stack -->
+  <line x1="270" y1="440" x2="420" y2="440" stroke="#a855f7" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="345" y="434" text-anchor="middle" font-size="9" fill="#86efac">kmalloc(8192)  // KERNEL_STACK_SIZE</text>
+  <line x1="420" y1="448" x2="270" y2="448" stroke="#334155" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#ret)"/>
+  <text x="345" y="460" text-anchor="middle" font-size="9" fill="#64748b">→ stack_base</text>
+
+  <!-- Build initial stack frame annotation -->
+  <rect x="275" y="462" width="310" height="38" rx="3" fill="#1c1c50" stroke="#6366f1" stroke-width="1"/>
+  <text x="430" y="476" text-anchor="middle" font-size="9" fill="#c7d2fe">Build initial stack frame (top → bottom):</text>
+  <text x="430" y="489" text-anchor="middle" font-size="8.5" fill="#a5b4fc">EFLAGS(0x202) CS(0x08) EIP(fn) DS(0x10) EAX..EDI(0)</text>
+
+  <!-- Create TCB -->
+  <line x1="270" y1="505" x2="940" y2="505" stroke="#9333ea" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="605" y="499" text-anchor="middle" font-size="9" fill="#d8b4fe">create TCB{pid, READY, kernel_esp, page_dir=CR3, next=NULL}</text>
+
+  <!-- return tcb* -->
+  <line x1="250" y1="515" x2="100" y2="515" stroke="#334155" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#ret)"/>
+  <text x="175" y="509" text-anchor="middle" font-size="9" fill="#c084fc">return tcb_t*   // PID=1 (task_a)</text>
+
+  <!-- Repeat note for B and C -->
+  <rect x="105" y="525" width="680" height="25" rx="3" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="445" y="541" text-anchor="middle" font-size="9" fill="#94a3b8">«repeat» task_create(task_b) → PID=2  |  task_create(task_c) → PID=3  (same sequence above)</text>
+
+  <!-- sched_add_task x3 -->
+  <line x1="100" y1="560" x2="770" y2="560" stroke="#a855f7" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="430" y="554" text-anchor="middle" font-size="9" fill="#818cf8">sched_add_task(ta) — CLI/PUSHF, enqueue, POPF → READY</text>
+  <line x1="770" y1="568" x2="100" y2="568" stroke="#334155" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#ret)"/>
+
+  <line x1="100" y1="576" x2="770" y2="576" stroke="#a855f7" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="430" y="573" text-anchor="middle" font-size="9" fill="#818cf8">sched_add_task(tb) + sched_add_task(tc)</text>
+  <line x1="770" y1="584" x2="100" y2="584" stroke="#334155" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#ret)"/>
+
+  <!-- ======== PHASE 5: sched_start ======== -->
+  <rect x="15" y="598" width="1070" height="22" rx="3" fill="#1c1c50" opacity="0.6"/>
+  <text x="30" y="613" font-size="10" font-weight="bold" fill="#818cf8">PHASE 5 — STI + sched_start() — Never Returns (step 22)</text>
+
+  <rect x="80" y="620" width="20" height="80" fill="#1e1b4b" rx="2"/>
+  <line x1="100" y1="634" x2="770" y2="634" stroke="#6366f1" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="430" y="628" text-anchor="middle" font-size="9" fill="#818cf8">sched_start() — create boot_tcb (pid=0, TERMINATED)</text>
+
+  <!-- context_switch(boot_tcb, first) -->
+  <line x1="770" y1="648" x2="590" y2="648" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="680" y="642" text-anchor="middle" font-size="9" fill="#a5b4fc">context_switch(&amp;boot_tcb, first)</text>
+
+  <line x1="590" y1="660" x2="940" y2="660" stroke="#9333ea" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="765" y="654" text-anchor="middle" font-size="9" fill="#d8b4fe">load CR3 → first→page_dir | IRET → task_a()</text>
+
+  <!-- Never returns annotation -->
+  <rect x="610" y="670" width="320" height="30" rx="4" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="770" y="682" text-anchor="middle" font-size="9" font-weight="bold" fill="#f87171">«noReturn» — boot context discarded forever</text>
+  <text x="770" y="694" text-anchor="middle" font-size="8" fill="#ef4444">kernel_main() never returns from sched_start()</text>
+
+  <!-- loop: IRQ0 every 10ms -->
+  <rect x="15" y="715" width="1070" height="22" rx="3" fill="#0a2019" opacity="0.7"/>
+  <text x="30" y="730" font-size="10" font-weight="bold" fill="#34d399">«loop every 10ms» — IRQ0 → pit_irq0_handler() → pic_send_eoi(0) → sched_switch() → context_switch(old, next)</text>
+
+  <rect x="80" y="737" width="20" height="35" fill="#064e3b" rx="2"/>
+  <line x1="100" y1="748" x2="770" y2="748" stroke="#10b981" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="430" y="742" text-anchor="middle" font-size="9" fill="#34d399">IRQ0 → pit_tick_count++ → EOI → sched_switch() → context_switch(A→B, B→C …)</text>
+  <line x1="770" y1="757" x2="940" y2="757" stroke="#34d399" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="855" y="770" text-anchor="middle" font-size="9" fill="#6ee7b7">IRET → next task resumes</text>
+
+  <!-- Outer border -->
+  <rect x="10" y="50" width="1080" height="755" fill="none" stroke="#334155" stroke-width="1.5" rx="2"/>
+</svg>

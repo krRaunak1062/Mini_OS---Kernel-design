@@ -1,0 +1,216 @@
+<svg viewBox="0 0 1100 780" xmlns="http://www.w3.org/2000/svg" font-family="'Courier New', monospace">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#475569"/>
+    </marker>
+    <marker id="agg" markerWidth="14" markerHeight="14" refX="7" refY="7" orient="auto">
+      <polygon points="7,0 14,7 7,14 0,7" fill="none" stroke="#475569" stroke-width="1.5"/>
+    </marker>
+    <marker id="comp" markerWidth="14" markerHeight="14" refX="7" refY="7" orient="auto">
+      <polygon points="7,0 14,7 7,14 0,7" fill="#475569"/>
+    </marker>
+    <marker id="dep" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f59e0b"/>
+    </marker>
+    <filter id="shadow">
+      <feDropShadow dx="2" dy="3" stdDeviation="3" flood-color="#00000040"/>
+    </filter>
+  </defs>
+
+  <rect width="1100" height="780" fill="#0f172a"/>
+
+  <!-- Title bar -->
+  <rect x="0" y="0" width="1100" height="42" fill="#1e293b"/>
+  <text x="550" y="27" text-anchor="middle" font-size="15" font-weight="bold" fill="#e2e8f0" letter-spacing="2">CLASS DIAGRAM — MiniOS Kernel Subsystem Architecture</text>
+  <text x="550" y="39" text-anchor="middle" font-size="9" fill="#64748b">MiniOS Group 31 | IIT Jodhpur | REQ-MEM-01–05, REQ-TASK-03–05 | Verified against actual implementation</text>
+
+  <!-- =================== kernel_system (top) =================== -->
+  <g filter="url(#shadow)">
+    <rect x="420" y="58" width="260" height="80" rx="4" fill="#1e3a5f" stroke="#3b82f6" stroke-width="2"/>
+    <rect x="420" y="58" width="260" height="26" rx="4" fill="#1d4ed8"/>
+    <rect x="420" y="80" width="260" height="4" fill="#1d4ed8"/>
+    <text x="550" y="74" text-anchor="middle" font-size="11" font-weight="bold" fill="#bfdbfe">«component»</text>
+    <text x="550" y="86" text-anchor="middle" font-size="13" font-weight="bold" fill="#eff6ff">kernel_system</text>
+    <line x1="420" y1="90" x2="680" y2="90" stroke="#3b82f6" stroke-width="1"/>
+    <text x="430" y="105" font-size="10" fill="#93c5fd">– name : "MiniOS v0.5"</text>
+    <text x="430" y="118" font-size="10" fill="#93c5fd">– load_addr : 0x100000</text>
+    <text x="430" y="131" font-size="10" fill="#93c5fd">– virt_base : 0xC0000000</text>
+  </g>
+
+  <!-- =================== memory_manager =================== -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="200" width="260" height="95" rx="4" fill="#14532d" stroke="#22c55e" stroke-width="2"/>
+    <rect x="40" y="200" width="260" height="26" rx="4" fill="#15803d"/>
+    <rect x="40" y="222" width="260" height="4" fill="#15803d"/>
+    <text x="170" y="216" text-anchor="middle" font-size="12" font-weight="bold" fill="#dcfce7">memory_manager</text>
+    <line x1="40" y1="228" x2="300" y2="228" stroke="#22c55e" stroke-width="1"/>
+    <text x="50" y="244" font-size="10" fill="#86efac">– bitmap : uint32_t[1024]</text>
+    <text x="50" y="257" font-size="10" fill="#86efac">– totalRAM : uint32_t</text>
+    <line x1="40" y1="264" x2="300" y2="264" stroke="#22c55e" stroke-width="0.5"/>
+    <text x="50" y="277" font-size="10" fill="#4ade80">+ mm_alloc_frame() : uint32_t</text>
+    <text x="50" y="289" font-size="10" fill="#4ade80">+ mm_free_frame(addr : uint32_t)</text>
+  </g>
+
+  <!-- =================== physical_memory_manager =================== -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="360" width="260" height="110" rx="4" fill="#0c2a1a" stroke="#16a34a" stroke-width="1.5"/>
+    <rect x="40" y="360" width="260" height="26" rx="4" fill="#166534"/>
+    <text x="170" y="378" text-anchor="middle" font-size="11" font-weight="bold" fill="#bbf7d0">physical_memory_manager</text>
+    <line x1="40" y1="386" x2="300" y2="386" stroke="#16a34a" stroke-width="1"/>
+    <text x="50" y="401" font-size="9.5" fill="#86efac">– bitmap : uint32_t[]  // 1 bit per 4KB frame</text>
+    <text x="50" y="414" font-size="9.5" fill="#86efac">– totalRAM : uint32_t</text>
+    <text x="50" y="427" font-size="9.5" fill="#86efac">– memory_manager_id : uint32_t</text>
+    <line x1="40" y1="433" x2="300" y2="433" stroke="#16a34a" stroke-width="0.5"/>
+    <text x="50" y="447" font-size="9.5" fill="#4ade80">+ mm_alloc_frame() : uint32_t</text>
+    <text x="50" y="460" font-size="9.5" fill="#4ade80">+ mm_free_frame(addr) : void</text>
+    <text x="50" y="463" font-size="8" fill="#6b7280">// mm/mm_phys.c — REQ-MEM-03</text>
+  </g>
+
+  <!-- =================== virtual_memory_manager =================== -->
+  <g filter="url(#shadow)">
+    <rect x="330" y="360" width="260" height="125" rx="4" fill="#0c2a1a" stroke="#16a34a" stroke-width="1.5"/>
+    <rect x="330" y="360" width="260" height="26" rx="4" fill="#166534"/>
+    <text x="460" y="378" text-anchor="middle" font-size="11" font-weight="bold" fill="#bbf7d0">virtual_memory_manager</text>
+    <line x1="330" y1="386" x2="590" y2="386" stroke="#16a34a" stroke-width="1"/>
+    <text x="340" y="401" font-size="9.5" fill="#86efac">– pageDirectory : page_dir_t*</text>
+    <text x="340" y="414" font-size="9.5" fill="#86efac">– heap_virt : 0xC0400000</text>
+    <text x="340" y="427" font-size="9.5" fill="#86efac">– heap_phys : 0x00500000</text>
+    <line x1="330" y1="433" x2="590" y2="433" stroke="#16a34a" stroke-width="0.5"/>
+    <text x="340" y="447" font-size="9.5" fill="#4ade80">+ paging_init()</text>
+    <text x="340" y="460" font-size="9.5" fill="#4ade80">+ paging_map_page(virt,phys,flags)</text>
+    <text x="340" y="473" font-size="9.5" fill="#4ade80">+ paging_create_directory()</text>
+    <text x="340" y="486" font-size="8" fill="#6b7280">// arch/x86/paging.c — REQ-MEM-02,04</text>
+  </g>
+
+  <!-- =================== heap_manager =================== -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="540" width="260" height="110" rx="4" fill="#0c2a1a" stroke="#16a34a" stroke-width="1.5"/>
+    <rect x="40" y="540" width="260" height="26" rx="4" fill="#166534"/>
+    <text x="170" y="558" text-anchor="middle" font-size="11" font-weight="bold" fill="#bbf7d0">heap_manager</text>
+    <line x1="40" y1="566" x2="300" y2="566" stroke="#16a34a" stroke-width="1"/>
+    <text x="50" y="581" font-size="9.5" fill="#86efac">– heap_base : 0xC0400000</text>
+    <text x="50" y="594" font-size="9.5" fill="#86efac">– heap_end  : 0xC0800000  // 4MB</text>
+    <text x="50" y="607" font-size="9.5" fill="#86efac">– head : free_block*</text>
+    <line x1="40" y1="613" x2="300" y2="613" stroke="#16a34a" stroke-width="0.5"/>
+    <text x="50" y="627" font-size="9.5" fill="#4ade80">+ kmalloc(size : uint32_t) : void*</text>
+    <text x="50" y="640" font-size="9.5" fill="#4ade80">+ kfree(ptr : void*) : void</text>
+    <text x="50" y="643" font-size="8" fill="#6b7280">// mm/heap.c — REQ-MEM-04,05</text>
+  </g>
+
+  <!-- =================== task_manager =================== -->
+  <g filter="url(#shadow)">
+    <rect x="710" y="200" width="280" height="95" rx="4" fill="#3b1f5e" stroke="#a855f7" stroke-width="2"/>
+    <rect x="710" y="200" width="280" height="26" rx="4" fill="#7e22ce"/>
+    <text x="850" y="216" text-anchor="middle" font-size="12" font-weight="bold" fill="#f3e8ff">task_manager</text>
+    <line x1="710" y1="228" x2="990" y2="228" stroke="#a855f7" stroke-width="1"/>
+    <text x="720" y="244" font-size="10" fill="#d8b4fe">– current_task : tcb_t*</text>
+    <text x="720" y="257" font-size="10" fill="#d8b4fe">– queue_tail : tcb_t*   // circular list</text>
+    <text x="720" y="270" font-size="10" fill="#d8b4fe">– task_count : uint32_t</text>
+    <line x1="710" y1="276" x2="990" y2="276" stroke="#a855f7" stroke-width="0.5"/>
+    <text x="720" y="288" font-size="10" fill="#c084fc">+ sched_init() : void</text>
+  </g>
+
+  <!-- =================== tcb_t (REQ-TASK-03) =================== -->
+  <g filter="url(#shadow)">
+    <rect x="710" y="360" width="280" height="195" rx="4" fill="#2d1657" stroke="#9333ea" stroke-width="2"/>
+    <rect x="710" y="360" width="280" height="26" rx="4" fill="#7e22ce"/>
+    <text x="850" y="375" text-anchor="middle" font-size="11" font-weight="bold" fill="#f3e8ff">tcb_t</text>
+    <text x="850" y="386" text-anchor="middle" font-size="9" fill="#c084fc">«REQ-TASK-03» task.h</text>
+    <line x1="710" y1="390" x2="990" y2="390" stroke="#9333ea" stroke-width="1"/>
+    <!-- Actual fields from task.h with offsets -->
+    <text x="720" y="406" font-size="9.5" fill="#d8b4fe">– pid          : uint32_t   // offset  0</text>
+    <text x="720" y="419" font-size="9.5" fill="#d8b4fe">– state        : task_state_t // offset 4</text>
+    <text x="720" y="432" font-size="9.5" fill="#e879f9">– kernel_esp   : uint32_t   // offset  8 ★</text>
+    <text x="720" y="445" font-size="9.5" fill="#e879f9">– page_dir     : uint32_t   // offset 12 ★</text>
+    <text x="720" y="458" font-size="9.5" fill="#d8b4fe">– next         : tcb_t*     // offset 16</text>
+    <text x="720" y="471" font-size="9.5" fill="#d8b4fe">– kernel_stack : uint8_t*   // offset 20</text>
+    <text x="720" y="484" font-size="8" fill="#7c3aed">// KERNEL_STACK_SIZE = 8192 bytes (8KB)</text>
+    <line x1="710" y1="490" x2="990" y2="490" stroke="#9333ea" stroke-width="0.5"/>
+    <text x="720" y="505" font-size="9" fill="#c084fc">States: READY(0) RUNNING(1) BLOCKED(2) TERM(3)</text>
+    <text x="720" y="518" font-size="8" fill="#6b7280">// scheduler/task.c  context_switch.asm</text>
+    <text x="720" y="530" font-size="8" fill="#e879f9">// ★ offsets verified by _Static_assert</text>
+    <text x="720" y="543" font-size="8" fill="#6b7280">// Stack: EDI ESI EBP ESP EBX EDX ECX EAX DS EIP CS EFLAGS</text>
+  </g>
+
+  <!-- =================== scheduler =================== -->
+  <g filter="url(#shadow)">
+    <rect x="710" y="580" width="280" height="105" rx="4" fill="#1a0f40" stroke="#6366f1" stroke-width="1.5"/>
+    <rect x="710" y="580" width="280" height="26" rx="4" fill="#4338ca"/>
+    <text x="850" y="598" text-anchor="middle" font-size="11" font-weight="bold" fill="#e0e7ff">scheduler</text>
+    <line x1="710" y1="606" x2="990" y2="606" stroke="#6366f1" stroke-width="1"/>
+    <text x="720" y="621" font-size="9.5" fill="#c7d2fe">– algorithm : "Round-Robin"</text>
+    <text x="720" y="634" font-size="9.5" fill="#c7d2fe">– timeSlice : 10ms (100Hz PIT)</text>
+    <text x="720" y="647" font-size="9.5" fill="#c7d2fe">– boot_tcb  : tcb_t  // bootstrap dummy</text>
+    <line x1="710" y1="653" x2="990" y2="653" stroke="#6366f1" stroke-width="0.5"/>
+    <text x="720" y="667" font-size="9.5" fill="#818cf8">+ sched_switch() : void</text>
+    <text x="720" y="680" font-size="9.5" fill="#818cf8">+ sched_add_task(tcb : tcb_t*)</text>
+    <text x="720" y="676" font-size="8" fill="#6b7280">// scheduler/sched.c</text>
+  </g>
+
+  <!-- =================== context_switch =================== -->
+  <g filter="url(#shadow)">
+    <rect x="330" y="580" width="280" height="95" rx="4" fill="#1c1c50" stroke="#4f46e5" stroke-width="1.5"/>
+    <rect x="330" y="580" width="280" height="26" rx="4" fill="#3730a3"/>
+    <text x="460" y="598" text-anchor="middle" font-size="11" font-weight="bold" fill="#e0e7ff">context_switch</text>
+    <line x1="330" y1="606" x2="610" y2="606" stroke="#4f46e5" stroke-width="1"/>
+    <text x="340" y="621" font-size="9" fill="#c7d2fe">void context_switch(old:tcb_t*, new:tcb_t*)</text>
+    <text x="340" y="634" font-size="9" fill="#a5b4fc">pushfd | push CS | push .resume | push DS</text>
+    <text x="340" y="647" font-size="9" fill="#a5b4fc">pushad | save ESP | load new ESP</text>
+    <text x="340" y="660" font-size="9" fill="#a5b4fc">load CR3 | popad | pop DS | IRET</text>
+    <text x="340" y="673" font-size="8" fill="#6b7280">// arch/x86/context_switch.asm — REQ-TASK-05</text>
+  </g>
+
+  <!-- =================== CONNECTIONS =================== -->
+  <!-- kernel_system → memory_manager (composition) -->
+  <line x1="460" y1="138" x2="170" y2="200" stroke="#22c55e" stroke-width="1.5" marker-end="url(#comp)"/>
+  <text x="280" y="166" font-size="9" fill="#22c55e">1</text>
+
+  <!-- kernel_system → task_manager (composition) -->
+  <line x1="640" y1="138" x2="850" y2="200" stroke="#a855f7" stroke-width="1.5" marker-end="url(#comp)"/>
+  <text x="780" y="166" font-size="9" fill="#a855f7">1</text>
+
+  <!-- memory_manager → physical (generalization) -->
+  <line x1="170" y1="295" x2="170" y2="360" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="175" y="330" font-size="9" fill="#6b7280">«uses»</text>
+
+  <!-- memory_manager → virtual (generalization) -->
+  <line x1="295" y1="247" x2="420" y2="380" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+
+  <!-- memory_manager → heap -->
+  <line x1="170" y1="295" x2="170" y2="540" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+
+  <!-- task_manager → tcb (1 to many) -->
+  <line x1="850" y1="295" x2="850" y2="360" stroke="#a855f7" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="855" y="330" font-size="9" fill="#a855f7">0..*</text>
+
+  <!-- task_manager → scheduler -->
+  <line x1="850" y1="295" x2="850" y2="580" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+
+  <!-- scheduler → context_switch (uses) -->
+  <line x1="710" y1="628" x2="610" y2="628" stroke="#4f46e5" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+  <text x="660" y="622" text-anchor="middle" font-size="9" fill="#6366f1">«calls»</text>
+
+  <!-- tcb → tcb (self-link for circular queue) -->
+  <path d="M990 500 Q1050 500 1050 560 Q1050 620 990 600" fill="none" stroke="#9333ea" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+  <text x="1055" y="555" font-size="9" fill="#9333ea">next</text>
+
+  <!-- heap uses mm_alloc_frame (dependency) -->
+  <line x1="170" y1="540" x2="170" y2="470" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#dep)"/>
+  <text x="175" y="508" font-size="8" fill="#f59e0b">«uses frame»</text>
+
+  <!-- EXT-SW-01: scheduler uses paging_create_directory -->
+  <line x1="710" y1="628" x2="590" y2="440" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#dep)"/>
+  <text x="630" y="530" font-size="8" fill="#f59e0b" transform="rotate(-50,630,530)">EXT-SW-01</text>
+
+  <!-- Legend -->
+  <rect x="40" y="700" width="580" height="65" rx="4" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="50" y="716" font-size="10" font-weight="bold" fill="#94a3b8">LEGEND</text>
+  <line x1="50" y1="726" x2="90" y2="726" stroke="#475569" stroke-width="2" marker-end="url(#comp)"/>
+  <text x="95" y="730" font-size="9" fill="#94a3b8">Composition</text>
+  <line x1="185" y1="726" x2="225" y2="726" stroke="#475569" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+  <text x="230" y="730" font-size="9" fill="#94a3b8">Dependency/uses</text>
+  <line x1="340" y1="726" x2="380" y2="726" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#dep)"/>
+  <text x="385" y="730" font-size="9" fill="#94a3b8">Interface (EXT-SW-01)</text>
+  <text x="50" y="750" font-size="8" fill="#64748b">★ kernel_esp (offset 8) and page_dir (offset 12) verified by _Static_assert in scheduler/task.c</text>
+  <text x="50" y="762" font-size="8" fill="#64748b">  Stack frame layout: [EDI ESI EBP ESP EBX EDX ECX EAX | DS | EIP CS EFLAGS] — matched by context_switch.asm</text>
+</svg>

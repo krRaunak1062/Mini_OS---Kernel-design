@@ -114,22 +114,28 @@ void *kmalloc(uint32_t size)
     /* Round up to minimum allocation size */
     if (size < MIN_ALLOC) size = MIN_ALLOC;
 
+    /*
+     * BUG FIX (Bug 5): Disable interrupts for the duration of the heap walk.
+     *
+     * IRQ0 can fire mid-walk and sched_switch() may schedule another task
+     * that also calls kmalloc/kfree.  Both tasks would then walk the same
+     * free list simultaneously, causing double-alloc or next-pointer
+     * corruption.  CLI/STI makes the entire alloc atomic w.r.t. IRQ0.
+     * The critical section is short (one free-list scan + split), so
+     * interrupt latency impact is negligible at 100Hz.
+     */
+    __asm__ volatile ("cli");
+
     block_header_t *cur = heap_head;
+    void *result = 0;
 
     while (cur) {
-        /* Skip used blocks and blocks that are too small */
         if (cur->used || cur->size < size) {
             cur = cur->next;
             continue;
         }
-
-        /*
-         * Block is free and large enough.
-         * Split if there's enough space for a new header + MIN_ALLOC bytes.
-         */
         uint32_t leftover = cur->size - size;
         if (leftover > sizeof(block_header_t) + MIN_ALLOC) {
-            /* Create a new free block in the leftover space */
             block_header_t *split =
                 (block_header_t *)((uint8_t *)cur
                                    + sizeof(block_header_t)
@@ -137,17 +143,20 @@ void *kmalloc(uint32_t size)
             split->size = leftover - sizeof(block_header_t);
             split->used = 0;
             split->next = cur->next;
-
             cur->size = size;
             cur->next = split;
         }
-
         cur->used = 1;
-        return (uint8_t *)cur + sizeof(block_header_t);
+        result = (uint8_t *)cur + sizeof(block_header_t);
+        break;
     }
 
-    serial_printf("[HEAP] ERROR: kmalloc(%u) - out of heap memory\n", size);
-    return 0;
+    __asm__ volatile ("sti");
+
+    if (!result)
+        serial_printf("[HEAP] ERROR: kmalloc(%u) - out of heap memory\n", size);
+
+    return result;
 }
 
 /* ------------------------------------------------------------------ */
@@ -165,29 +174,28 @@ void kfree(void *ptr)
 {
     if (!ptr) return;
 
-    /* Recover the header immediately before the data pointer */
     block_header_t *hdr =
         (block_header_t *)((uint8_t *)ptr - sizeof(block_header_t));
 
-    /* Sanity check: should be marked used */
+    /* BUG FIX (Bug 5): Guard kfree with CLI/STI — same race as kmalloc. */
+    __asm__ volatile ("cli");
+
     if (!hdr->used) {
         serial_printf("[HEAP] WARNING: kfree() called on already-free "
                       "block @ 0x%x\n", (uint32_t)ptr);
+        __asm__ volatile ("sti");
         return;
     }
 
     hdr->used = 0;
 
-    /*
-     * Coalesce: merge this block with consecutive free blocks.
-     * Walk forward as long as the next block is also free.
-     */
     block_header_t *cur = hdr;
     while (cur->next && !cur->next->used) {
-        /* Absorb next block: add its header + data size to cur->size */
         cur->size += sizeof(block_header_t) + cur->next->size;
         cur->next  = cur->next->next;
     }
+
+    __asm__ volatile ("sti");
 }
 
 /* ------------------------------------------------------------------ */

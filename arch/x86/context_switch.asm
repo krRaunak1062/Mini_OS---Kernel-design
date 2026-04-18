@@ -53,61 +53,48 @@ TCB_STACK_BASE equ  20
 
 context_switch:
     ; ---- Step 1: build outgoing task's save frame ----
-    ;
-    ; Push an IRET frame so THIS task can be resumed at .resume
-    ; when it is next scheduled.
-    pushfd                       ; save current EFLAGS
-    push  dword 0x08             ; kernel CS  (code segment selector)
-    push  dword .resume          ; EIP: resume point for this task
+    pushfd
+    or  dword [esp], 0x200    ; force IF=1 so task resumes with interrupts ON
 
-    push  ds                     ; save DS (segment register)
-    pushad                       ; save EAX ECX EDX EBX ESP EBP ESI EDI
-                                 ; (EAX pushed first → highest addr;
-                                 ;  EDI pushed last  → lowest addr = top)
+    push  dword 0x08
+    push  dword .resume
+
+    push  ds
+    pushad
 
     ; ---- Step 2: save esp into old_task->kernel_esp ----
-    ;
-    ; After all pushes, old_task is at [esp+52], new_task at [esp+56].
-    ; (48 bytes pushed + 4-byte return address already at [esp+48])
     mov   eax, [esp + 52]              ; load old_task pointer
     mov   [eax + TCB_KERNEL_ESP], esp  ; save current stack pointer
 
     ; ---- Step 3: read new_task before switching stack ----
-    mov   ecx, [esp + 56]              ; load new_task pointer (still on old stack)
+    mov   ecx, [esp + 56]              ; load new_task pointer
 
     ; ---- Step 4: switch to new_task's kernel stack ----
-    mov   esp, [ecx + TCB_KERNEL_ESP]  ; ESP now points into new_task's stack
+    mov   esp, [ecx + TCB_KERNEL_ESP]
 
     ; ---- Step 5: switch address space (CR3) ----
-    ;
-    ; All CR3 writes live in arch/x86/ per NFR-MAINT-01.
-    ; ecx still holds new_task pointer.
     mov   edx, [ecx + TCB_PAGE_DIR]
-    mov   cr3, edx                     ; flush TLB, activate new page directory
+    mov   cr3, edx
 
     ; ---- Step 6: restore new_task's register state ----
     ;
-    ; Stack layout at this point (same frame layout as step 1, or
-    ; the hand-crafted frame from task_create for new tasks):
+    ; Stack layout (same frame, either from task_create or prior switch):
     ;   [esp+0 ]  edi  \
     ;   [esp+4 ]  esi   |  PUSHAD block
     ;   [esp+8 ]  ebp   |
-    ;   [esp+12]  esp   |  (dummy — POPAD skips this slot)
+    ;   [esp+12]  esp   |  (dummy)
     ;   [esp+16]  ebx   |
     ;   [esp+20]  edx   |
     ;   [esp+24]  ecx   |
     ;   [esp+28]  eax  /
     ;   [esp+32]  ds
-    ;   [esp+36]  eip   \
-    ;   [esp+40]  cs     | IRET frame
-    ;   [esp+44]  eflags/
-    popad                          ; restore EDI ESI EBP (skip ESP) EBX EDX ECX EAX
+    ;   [esp+36]  eip  (.resume or fn_ptr)
+    ;   [esp+40]  cs   (0x08)
+    ;   [esp+44]  eflags
+    popad
 
-    ; Restore DS, ES, FS, GS from the ds slot.
-    ; Use AX (16-bit) to read only the low 16 bits of the saved value.
-    ; EAX was just restored by POPAD; we clobber it only until IRET.
-    mov   ax, [esp]                ; read saved ds (16-bit)
-    add   esp, 4                   ; pop ds slot
+    mov   ax, [esp]
+    add   esp, 4
     mov   ds, ax
     mov   es, ax
     mov   fs, ax
@@ -115,15 +102,33 @@ context_switch:
 
     ; ---- Step 7: IRET to new task ----
     ;
-    ; Stack now:  [esp+0] eip,  [esp+4] cs,  [esp+8] eflags
-    ; For existing tasks: eip = .resume  → falls through to RET.
-    ; For new tasks:      eip = fn_ptr   → jumps to task function.
+    ; For new tasks:      eip = fn_ptr  -> jumps into task function
+    ; For existing tasks: eip = .resume -> falls through (see below)
     iret
 
-; ---- Resume point for previously-switched-out tasks ----
+; ---------------------------------------------------------------
+; .resume — landing point when an existing task is switched back in.
 ;
-; When an existing task is rescheduled, IRET lands here.
-; We return to sched_switch() → pit_irq0_handler() → IRQ common
-; handler → task's interrupted point (via the outer IRET in isr_stubs).
+; IRET lands here with the task's registers fully restored and
+; interrupts re-enabled (IF was in saved eflags).
+;
+; WHY ret IS CORRECT HERE:
+;   context_switch() is a normal cdecl function called from sched_switch().
+;   The CPU pushed a return address (back into sched_switch) BEFORE we
+;   pushed our 48-byte save frame (pushfd + push cs + push .resume +
+;   push ds + pushad).
+;
+;   When sched_switch() later re-selects this task and calls
+;   context_switch(old2, new2=this_task), the restore path:
+;     popad          → restores edi..eax from this task's save frame
+;     discard DS     → add esp, 4 (pop ds into ax, reload seg regs)
+;     iret           → pops EIP=.resume, CS=0x08, EFLAGS → lands here
+;
+;   At that moment, ESP points at the original cdecl return address
+;   that was on the stack when this task first called context_switch().
+;   ret pops it → returns to sched_switch() → pit_irq0_handler()
+;   → irq_handler() → irq_common_stub → iret back into the task's
+;   actual interrupted execution point. Correct.
+; ---------------------------------------------------------------
 .resume:
     ret

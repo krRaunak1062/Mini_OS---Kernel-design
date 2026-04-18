@@ -65,27 +65,41 @@
  *   [+4]  es
  *   [+8]  fs
  *   [+12] gs
- *   [+16] eax  \
- *   [+20] ecx   |
- *   [+24] edx   |  pushad (EAX pushed first = highest addr in block,
- *   [+28] ebx   |          EDI pushed last  = lowest addr in block)
- *   [+32] esp   |  (esp_dummy = ESP value before pushad)
- *   [+36] ebp   |
- *   [+40] esi   |
- *   [+44] edi  /
+ * BUG FIX (Bug 2): GP register order corrected to match NASM PUSHAD.
+ *
+ * NASM PUSHAD pushes: EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI
+ *   EAX is pushed FIRST → ends up at the HIGHEST address in the block.
+ *   EDI is pushed LAST  → ends up at the LOWEST address (lowest offset).
+ *
+ * So the actual stack layout from esp upward (lowest offset = lowest addr):
+ *   [+16] edi  \   EDI pushed last by PUSHAD → lowest offset in block
+ *   [+20] esi   |
+ *   [+24] ebp   |  PUSHAD block — field order matches push order
+ *   [+28] esp   |  (esp_dummy = ESP value captured by PUSHAD)
+ *   [+32] ebx   |
+ *   [+36] edx   |
+ *   [+40] ecx   |
+ *   [+44] eax  /   EAX pushed first by PUSHAD → highest offset in block
  *   [+48] int_no    pushed by ISR/IRQ macro
  *   [+52] err_code  pushed by ISR/IRQ macro (real or dummy 0)
  *   [+56] eip   \
  *   [+60] cs     |  CPU auto-pushed (ring-0, no privilege change)
  *   [+64] eflags/
+ *
+ * IMPORTANT: int_no, err_code, eip, cs, eflags are at the SAME offsets
+ * regardless of GP order (they sit above the entire pushad block).
+ * Current code only reads those fields so no crash occurs with the old
+ * wrong order — but any future handler reading regs->eax for a syscall
+ * number would silently receive regs->edi instead. Fixed here.
  */
 typedef struct {
     uint32_t ds;                                    /* manually pushed last */
-    uint32_t es, fs, gs;                            /* segment regs        */
-    uint32_t eax, ecx, edx, ebx, esp_dummy,         /* pushad block        */
-             ebp, esi, edi;
-    uint32_t int_no, err_code;                      /* stub-pushed         */
-    uint32_t eip, cs, eflags;                       /* CPU auto-pushed     */
+    uint32_t es, fs, gs;                            /* segment regs         */
+    /* PUSHAD: EDI pushed last = lowest offset; EAX pushed first = highest */
+    uint32_t edi, esi, ebp, esp_dummy,              /* pushad block —       */
+             ebx, edx, ecx, eax;                    /* correct NASM order   */
+    uint32_t int_no, err_code;                      /* stub-pushed          */
+    uint32_t eip, cs, eflags;                       /* CPU auto-pushed      */
 } __attribute__((packed)) registers_t;
 
 /* ------------------------------------------------------------------

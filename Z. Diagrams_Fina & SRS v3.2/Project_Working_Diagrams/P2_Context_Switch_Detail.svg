@@ -1,0 +1,180 @@
+<svg viewBox="0 0 1000 740" xmlns="http://www.w3.org/2000/svg" font-family="'Courier New', monospace">
+  <rect width="1000" height="740" fill="#0d1117"/>
+
+  <text x="500" y="36" text-anchor="middle" font-size="18" font-weight="bold" fill="#58a6ff" letter-spacing="1">CONTEXT SWITCH — Stack Frame &amp; Register Save/Restore</text>
+  <text x="500" y="56" text-anchor="middle" font-size="11" fill="#8b949e">MiniOS Group 31 | arch/x86/context_switch.asm | REQ-TASK-05 | NFR-PERF-01 (0.3μs &lt; 50μs)</text>
+  <line x1="40" y1="66" x2="960" y2="66" stroke="#30363d" stroke-width="1"/>
+
+  <!-- ===== PHASE LABELS ===== -->
+  <text x="165" y="88" text-anchor="middle" font-size="11" font-weight="bold" fill="#f0883e">① SAVE (outgoing task)</text>
+  <text x="500" y="88" text-anchor="middle" font-size="11" font-weight="bold" fill="#58a6ff">② SWITCH (pointer + CR3)</text>
+  <text x="835" y="88" text-anchor="middle" font-size="11" font-weight="bold" fill="#3fb950">③ RESTORE (incoming task)</text>
+
+  <line x1="330" y1="76" x2="330" y2="720" stroke="#30363d" stroke-width="1" stroke-dasharray="4,4"/>
+  <line x1="668" y1="76" x2="668" y2="720" stroke="#30363d" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <!-- ===== OLD TASK KERNEL STACK (left) ===== -->
+  <text x="165" y="110" text-anchor="middle" font-size="10" fill="#f0883e">old_task kernel stack (grows ↓)</text>
+  <text x="165" y="126" text-anchor="middle" font-size="9" fill="#6e7681">before context_switch(old, new)</text>
+
+  <!-- Stack slots - 48-byte save frame -->
+  <!-- each slot: 30px tall -->
+  <!-- highest address at top -->
+  <text x="55" y="150" font-size="9" fill="#6e7681">esp+48→</text>
+  <rect x="85" y="138" width="180" height="26" fill="#21262d" stroke="#30363d" stroke-width="1"/>
+  <text x="175" y="155" text-anchor="middle" font-size="9" fill="#6e7681">return addr (cdecl)</text>
+
+  <text x="55" y="178" font-size="9" fill="#f0883e">esp+44→</text>
+  <rect x="85" y="164" width="180" height="26" fill="#f0883e" opacity="0.8" stroke="#f0883e" stroke-width="1.5"/>
+  <text x="175" y="181" text-anchor="middle" font-size="9" font-weight="bold" fill="#0d1117">EFLAGS (pushfd)</text>
+
+  <text x="55" y="204" font-size="9" fill="#f0883e">esp+40→</text>
+  <rect x="85" y="190" width="180" height="26" fill="#f0883e" opacity="0.75" stroke="#f0883e" stroke-width="1.5"/>
+  <text x="175" y="207" text-anchor="middle" font-size="9" font-weight="bold" fill="#0d1117">CS = 0x08 (push)</text>
+
+  <text x="55" y="230" font-size="9" fill="#f0883e">esp+36→</text>
+  <rect x="85" y="216" width="180" height="26" fill="#f0883e" opacity="0.7" stroke="#f0883e" stroke-width="1.5"/>
+  <text x="175" y="233" text-anchor="middle" font-size="9" font-weight="bold" fill="#0d1117">EIP = .resume (push)</text>
+
+  <text x="55" y="256" font-size="9" fill="#f0883e">esp+32→</text>
+  <rect x="85" y="242" width="180" height="26" fill="#d2a8ff" opacity="0.7" stroke="#d2a8ff" stroke-width="1.5"/>
+  <text x="175" y="259" text-anchor="middle" font-size="9" font-weight="bold" fill="#0d1117">DS (push ds)</text>
+
+  <text x="55" y="282" font-size="9" fill="#3fb950">esp+28→</text>
+  <rect x="85" y="268" width="180" height="26" fill="#3fb950" opacity="0.7" stroke="#3fb950" stroke-width="1.5"/>
+  <text x="175" y="285" text-anchor="middle" font-size="9" font-weight="bold" fill="#0d1117">EAX (pushad)</text>
+
+  <rect x="85" y="294" width="180" height="26" fill="#3fb950" opacity="0.65" stroke="#3fb950" stroke-width="1"/>
+  <text x="175" y="311" text-anchor="middle" font-size="9" fill="#0d1117">ECX</text>
+
+  <rect x="85" y="320" width="180" height="26" fill="#3fb950" opacity="0.6" stroke="#3fb950" stroke-width="1"/>
+  <text x="175" y="337" text-anchor="middle" font-size="9" fill="#0d1117">EDX</text>
+
+  <rect x="85" y="346" width="180" height="26" fill="#3fb950" opacity="0.55" stroke="#3fb950" stroke-width="1"/>
+  <text x="175" y="363" text-anchor="middle" font-size="9" fill="#0d1117">EBX</text>
+
+  <rect x="85" y="372" width="180" height="26" fill="#3fb950" opacity="0.5" stroke="#3fb950" stroke-width="1"/>
+  <text x="175" y="389" text-anchor="middle" font-size="9" fill="#0d1117">ESP (dummy — popad skips)</text>
+
+  <rect x="85" y="398" width="180" height="26" fill="#3fb950" opacity="0.45" stroke="#3fb950" stroke-width="1"/>
+  <text x="175" y="415" text-anchor="middle" font-size="9" fill="#0d1117">EBP</text>
+
+  <rect x="85" y="424" width="180" height="26" fill="#3fb950" opacity="0.4" stroke="#3fb950" stroke-width="1"/>
+  <text x="175" y="441" text-anchor="middle" font-size="9" fill="#0d1117">ESI</text>
+
+  <text x="55" y="462" font-size="9" fill="#3fb950">esp+0→</text>
+  <rect x="85" y="450" width="180" height="26" fill="#3fb950" opacity="0.35" stroke="#3fb950" stroke-width="1"/>
+  <text x="175" y="467" text-anchor="middle" font-size="9" fill="#0d1117">EDI</text>
+
+  <!-- brace + label -->
+  <line x1="265" y1="164" x2="285" y2="164" stroke="#f0883e" stroke-width="1"/>
+  <line x1="285" y1="164" x2="285" y2="242" stroke="#f0883e" stroke-width="1"/>
+  <line x1="265" y1="242" x2="285" y2="242" stroke="#f0883e" stroke-width="1"/>
+  <text x="300" y="207" font-size="8" fill="#f0883e">IRET</text>
+  <text x="300" y="219" font-size="8" fill="#f0883e">frame</text>
+
+  <line x1="265" y1="242" x2="285" y2="242" stroke="#d2a8ff" stroke-width="1"/>
+  <line x1="265" y1="476" x2="285" y2="476" stroke="#3fb950" stroke-width="1"/>
+  <line x1="285" y1="242" x2="285" y2="476" stroke="#3fb950" stroke-width="1"/>
+  <text x="300" y="365" font-size="8" fill="#3fb950">PUSHAD</text>
+  <text x="300" y="377" font-size="8" fill="#3fb950">block</text>
+
+  <!-- save ESP label -->
+  <text x="165" y="500" text-anchor="middle" font-size="9" fill="#58a6ff">→ old_task→kernel_esp = esp</text>
+  <text x="165" y="514" text-anchor="middle" font-size="9" fill="#58a6ff">   (saved in TCB.kernel_esp)</text>
+
+  <!-- ===== MIDDLE: TCB + SWITCH LOGIC ===== -->
+  <text x="500" y="110" text-anchor="middle" font-size="10" fill="#58a6ff">tcb_t fields (include/task.h)</text>
+
+  <!-- old TCB -->
+  <rect x="368" y="120" width="132" height="140" rx="5" fill="#161b22" stroke="#f0883e" stroke-width="1.5"/>
+  <text x="434" y="138" text-anchor="middle" font-size="9" font-weight="bold" fill="#f0883e">old_task TCB</text>
+  <line x1="368" y1="144" x2="500" y2="144" stroke="#f0883e" stroke-width="1" opacity="0.5"/>
+  <text x="434" y="158" text-anchor="middle" font-size="8" fill="#6e7681">pid: 1</text>
+  <text x="434" y="172" text-anchor="middle" font-size="8" fill="#6e7681">state: READY ←</text>
+  <text x="434" y="186" text-anchor="middle" font-size="8" fill="#58a6ff">kernel_esp: ← esp</text>
+  <text x="434" y="200" text-anchor="middle" font-size="8" fill="#6e7681">page_dir: 0x...</text>
+  <text x="434" y="214" text-anchor="middle" font-size="8" fill="#6e7681">*next →</text>
+  <text x="434" y="228" text-anchor="middle" font-size="8" fill="#6e7681">*stack: 0x...</text>
+  <text x="434" y="248" text-anchor="middle" font-size="8" fill="#8b949e">[esp+52] in asm</text>
+
+  <!-- new TCB -->
+  <rect x="500" y="120" width="132" height="140" rx="5" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+  <text x="566" y="138" text-anchor="middle" font-size="9" font-weight="bold" fill="#3fb950">new_task TCB</text>
+  <line x1="500" y1="144" x2="632" y2="144" stroke="#3fb950" stroke-width="1" opacity="0.5"/>
+  <text x="566" y="158" text-anchor="middle" font-size="8" fill="#6e7681">pid: 2</text>
+  <text x="566" y="172" text-anchor="middle" font-size="8" fill="#6e7681">state: RUNNING ←</text>
+  <text x="566" y="186" text-anchor="middle" font-size="8" fill="#58a6ff">kernel_esp: → esp</text>
+  <text x="566" y="200" text-anchor="middle" font-size="8" fill="#f0883e">page_dir: → CR3</text>
+  <text x="566" y="214" text-anchor="middle" font-size="8" fill="#6e7681">*next →</text>
+  <text x="566" y="228" text-anchor="middle" font-size="8" fill="#6e7681">*stack: 0x...</text>
+  <text x="566" y="248" text-anchor="middle" font-size="8" fill="#8b949e">[esp+56] in asm</text>
+
+  <!-- Switch steps -->
+  <rect x="368" y="280" width="264" height="200" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+  <text x="500" y="298" text-anchor="middle" font-size="10" font-weight="bold" fill="#58a6ff">context_switch() steps</text>
+  <line x1="380" y1="304" x2="620" y2="304" stroke="#30363d" stroke-width="1"/>
+  <text x="386" y="320" font-size="9" fill="#f0883e">1. pushfd / push 0x08 / push .resume</text>
+  <text x="386" y="334" font-size="9" fill="#f0883e">2. push ds / pushad</text>
+  <text x="386" y="348" font-size="9" fill="#58a6ff">3. old_task→kernel_esp = esp</text>
+  <text x="386" y="362" font-size="9" fill="#58a6ff">4. esp = new_task→kernel_esp</text>
+  <text x="386" y="376" font-size="9" fill="#f85149">5. cr3 = new_task→page_dir</text>
+  <text x="386" y="390" font-size="9" fill="#3fb950">6. popad</text>
+  <text x="386" y="404" font-size="9" fill="#3fb950">7. pop DS → set DS/ES/FS/GS</text>
+  <text x="386" y="418" font-size="9" fill="#3fb950">8. IRET  →  EIP + CS + EFLAGS</text>
+  <line x1="380" y1="426" x2="620" y2="426" stroke="#30363d" stroke-width="1"/>
+  <text x="500" y="442" text-anchor="middle" font-size="8" fill="#6e7681">for new task: EIP = fn_ptr (task starts)</text>
+  <text x="500" y="454" text-anchor="middle" font-size="8" fill="#6e7681">for old task: EIP = .resume (returns)</text>
+  <text x="500" y="466" text-anchor="middle" font-size="8" fill="#6e7681">48 bytes total | ≈ 0.3μs ≪ 50μs limit</text>
+
+  <!-- Why IRET not RET -->
+  <rect x="368" y="500" width="264" height="60" rx="6" fill="#161b22" stroke="#f85149" stroke-width="1.5"/>
+  <text x="500" y="518" text-anchor="middle" font-size="10" font-weight="bold" fill="#f85149">Why IRET and not RET?</text>
+  <text x="386" y="534" font-size="8" fill="#8b949e">RET  → restores EIP only</text>
+  <text x="386" y="548" font-size="8" fill="#8b949e">IRET → restores EIP + CS + EFLAGS atomically</text>
+  <text x="386" y="557" font-size="8" fill="#6e7681">       re-enables IF for new task in one instruction</text>
+
+  <!-- ===== NEW TASK KERNEL STACK (right) ===== -->
+  <text x="835" y="110" text-anchor="middle" font-size="10" fill="#3fb950">new_task kernel stack (task_create)</text>
+  <text x="835" y="126" text-anchor="middle" font-size="9" fill="#6e7681">hand-crafted in task_create(fn)</text>
+
+  <!-- Mirror stack for new task -->
+  <text x="720" y="150" font-size="9" fill="#3fb950">esp+44→</text>
+  <rect x="750" y="138" width="180" height="26" fill="#f0883e" opacity="0.8" stroke="#f0883e" stroke-width="1.5"/>
+  <text x="840" y="155" text-anchor="middle" font-size="9" font-weight="bold" fill="#0d1117">EFLAGS (IF=1)</text>
+
+  <text x="720" y="178" font-size="9" fill="#3fb950">esp+40→</text>
+  <rect x="750" y="164" width="180" height="26" fill="#f0883e" opacity="0.75" stroke="#f0883e" stroke-width="1.5"/>
+  <text x="840" y="181" text-anchor="middle" font-size="9" font-weight="bold" fill="#0d1117">CS = 0x08</text>
+
+  <text x="720" y="204" font-size="9" fill="#3fb950">esp+36→</text>
+  <rect x="750" y="190" width="180" height="26" fill="#f0883e" opacity="0.7" stroke="#f0883e" stroke-width="1.5"/>
+  <text x="840" y="207" text-anchor="middle" font-size="9" font-weight="bold" fill="#0d1117">EIP = fn_ptr  ← task entry!</text>
+
+  <rect x="750" y="216" width="180" height="26" fill="#d2a8ff" opacity="0.7" stroke="#d2a8ff" stroke-width="1.5"/>
+  <text x="840" y="233" text-anchor="middle" font-size="9" fill="#0d1117">DS = 0x10</text>
+
+  <rect x="750" y="242" width="180" height="26" fill="#3fb950" opacity="0.7" stroke="#3fb950" stroke-width="1"/>
+  <text x="840" y="259" text-anchor="middle" font-size="9" fill="#0d1117">EAX = 0</text>
+  <rect x="750" y="268" width="180" height="26" fill="#3fb950" opacity="0.6" stroke="#3fb950" stroke-width="1"/>
+  <text x="840" y="285" text-anchor="middle" font-size="9" fill="#0d1117">ECX = 0</text>
+  <rect x="750" y="294" width="180" height="26" fill="#3fb950" opacity="0.55" stroke="#3fb950" stroke-width="1"/>
+  <text x="840" y="311" text-anchor="middle" font-size="9" fill="#0d1117">EDX = 0</text>
+  <rect x="750" y="320" width="180" height="26" fill="#3fb950" opacity="0.5" stroke="#3fb950" stroke-width="1"/>
+  <text x="840" y="337" text-anchor="middle" font-size="9" fill="#0d1117">EBX = 0</text>
+  <rect x="750" y="346" width="180" height="26" fill="#3fb950" opacity="0.45" stroke="#3fb950" stroke-width="1"/>
+  <text x="840" y="363" text-anchor="middle" font-size="9" fill="#0d1117">ESP (dummy)</text>
+  <rect x="750" y="372" width="180" height="26" fill="#3fb950" opacity="0.4" stroke="#3fb950" stroke-width="1"/>
+  <text x="840" y="389" text-anchor="middle" font-size="9" fill="#0d1117">EBP = 0</text>
+  <rect x="750" y="398" width="180" height="26" fill="#3fb950" opacity="0.35" stroke="#3fb950" stroke-width="1"/>
+  <text x="840" y="415" text-anchor="middle" font-size="9" fill="#0d1117">ESI = 0</text>
+  <text x="720" y="444" font-size="9" fill="#3fb950">esp+0→</text>
+  <rect x="750" y="424" width="180" height="26" fill="#3fb950" opacity="0.3" stroke="#3fb950" stroke-width="1"/>
+  <text x="840" y="441" text-anchor="middle" font-size="9" fill="#0d1117">EDI = 0</text>
+
+  <text x="840" y="470" text-anchor="middle" font-size="9" fill="#58a6ff">→ saved in TCB.kernel_esp</text>
+  <text x="840" y="484" text-anchor="middle" font-size="9" fill="#6e7681">8KB stack via kmalloc()</text>
+
+  <!-- bottom note -->
+  <text x="500" y="690" text-anchor="middle" font-size="10" fill="#6e7681">Measured: context_switch() completes in ~0.3μs. NFR-PERF-01 requires &lt;50μs. 166× headroom. (verified in s5_integration.c)</text>
+</svg>

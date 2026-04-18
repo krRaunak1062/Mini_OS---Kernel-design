@@ -4,20 +4,25 @@
  *
  * Sprint 3 — interrupt dispatcher layer.
  *
- * DESIGN: This file does NOT replace any S2 file.
- *   S2 files kept exactly as-is:
- *     arch/x86/isr_handler.c  — handler table, isr_common_handler(),
- *                               isr_handlers_init(), GPF + PF wiring
- *     arch/x86/isr14.c        — full page fault decoder
+ * irq_handler() is called by irq_common_stub (NASM) for hardware IRQs.
  *
- *   This file adds:
- *     isr_handler()   — called by isr_common_stub (NASM) for exceptions
- *     irq_handler()   — called by irq_common_stub (NASM) for IRQs
- *     isr_install()   — called from kernel_main after pic_remap()
+ * For IRQ0 (PIT timer):
+ *   pit_irq0_handler() is called.  That function:
+ *     1. Increments pit_tick_count.
+ *     2. Sends EOI to master PIC (pic_send_eoi(0)).
+ *     3. Calls sched_switch().
  *
- *   isr_handler() simply forwards to S2's isr_common_handler() so
- *   all S2-registered handlers (ISR 13, ISR 14) continue to fire
- *   exactly as before.
+ *   sched_switch() calls context_switch(old, new).
+ *   For a NEW task, context_switch()'s iret jumps directly to the
+ *   task function.  The new task runs until the next IRQ0.
+ *   For an EXISTING task, context_switch()'s iret lands at .resume
+ *   in context_switch.asm, which falls through, returning here to
+ *   irq_handler() — which returns to irq_common_stub — which irets
+ *   back into the previous task's interrupted execution point.
+ *
+ * DO NOT call sched_switch() directly here — it is called inside
+ * pit_irq0_handler().  Calling it twice would switch tasks twice per
+ * tick and skip tasks.
  *
  * Authors:
  *   Aman Yadav   (B24CS1006) — S2 handler table (isr_handler.c)
@@ -29,14 +34,8 @@
 #include "pit.h"
 #include <stdint.h>
 
-/* S0 interface */
-extern void vga_puts(const char *s);
 extern void serial_puts(const char *s);
 
-/*
- * serial_puthex — local helper so this file has no dependency on
- * whether S0 exports serial_puthex() or not.
- */
 static void serial_puthex(uint32_t val)
 {
     static const char hex[] = "0123456789ABCDEF";
@@ -51,74 +50,48 @@ static void serial_puthex(uint32_t val)
     serial_puts(buf);
 }
 
-/*
- * Forward declaration — isr_common_handler() is defined in S2's
- * isr_handler.c and dispatches through the S2 handler table.
- * We call it from isr_handler() below so ISR 13 and ISR 14 keep
- * working exactly as Aman wired them in S2.
- */
 extern void isr_common_handler(registers_t *regs);
 
 /* ------------------------------------------------------------------
- * isr_handler — entry point for CPU exceptions (vectors 0–31).
- *
+ * isr_handler — entry for CPU exceptions (vectors 0–31).
  * Called by isr_common_stub in isr_stubs.asm.
- * Forwards to S2's isr_common_handler() which already handles
- * ISR 13 (GPF) and ISR 14 (page fault) via its dispatch table.
- * Any vector with no registered handler is caught by the default
- * path below.
  * Implements: REQ-TASK-02
  * ------------------------------------------------------------------ */
 void isr_handler(registers_t *regs)
 {
-    /*
-     * Delegate to S2's handler table first.
-     * This fires isr_14_handler() for #PF and gpf_handler() for #GP,
-     * exactly as set up in isr_handlers_init() during S2 init.
-     */
     isr_common_handler(regs);
-
-    /*
-     * isr_common_handler() halts for every vector it handles (13, 14)
-     * and also halts for unhandled vectors — so we only reach here
-     * for vectors it explicitly returns from (currently none in S2).
-     * Leave this path open for S4 where some exceptions may recover.
-     */
 }
 
 /* ------------------------------------------------------------------
- * irq_handler — entry point for hardware IRQs (vectors 32–47).
- *
+ * irq_handler — entry for hardware IRQs (vectors 32–47).
  * Called by irq_common_stub in isr_stubs.asm.
- * S2 had no IRQ handling at all — this is pure S3 new work.
+ *
+ * IMPORTANT: Do NOT call sched_switch() here.
+ * sched_switch() is called inside pit_irq0_handler() which is called
+ * from case 0 below.  Adding another sched_switch() call here would
+ * cause a double-switch per tick, skipping tasks.
+ *
  * Implements: REQ-TASK-02
  * ------------------------------------------------------------------ */
 void irq_handler(registers_t *regs)
 {
-    /*
-     * int_no holds the raw IRQ number (0-15) pushed by the IRQ_STUB macro.
-     * Do NOT subtract 32 — the stub pushes the IRQ number directly, not
-     * the IDT vector number. Subtracting 32 from 0 would underflow to 0xF0.
-     */
     uint8_t irq = (uint8_t)regs->int_no;
 
     switch (irq) {
 
         case 0:
             /*
-             * IRQ0 — PIT timer tick (100 Hz).
-             * pit_irq0_handler() increments pit_tick_count and
-             * sends EOI to master PIC.  sched_switch() will be
-             * called from here in S4.
+             * IRQ0 — PIT timer (100 Hz, 10ms quantum).
+             * pit_irq0_handler() does all three things in order:
+             *   1. pit_tick_count++
+             *   2. pic_send_eoi(0)   — EOI BEFORE context switch
+             *   3. sched_switch()    — may not return for new tasks
              */
             pit_irq0_handler();
             break;
 
         default:
-            /*
-             * Unhandled IRQ — must send EOI or the PIC will never
-             * re-fire this line again (IRQ line stays masked).
-             */
+            /* Unhandled IRQ — send EOI or the PIC line stays masked. */
             serial_puts("[IRQ] Unhandled IRQ ");
             serial_puthex(irq);
             serial_puts("\n");
@@ -128,21 +101,11 @@ void irq_handler(registers_t *regs)
 }
 
 /* ------------------------------------------------------------------
- * isr_install — called once from kernel_main after pic_remap()
- *               and pit_init(), before STI.
+ * isr_install — called from kernel_main after pic_remap() + pit_init().
  * Implements: REQ-TASK-01, REQ-TASK-02
  * ------------------------------------------------------------------ */
 void isr_install(void)
 {
-    /*
-     * Bug Fix 4: isr_handlers_init() registers ISR 13 (GPF) and
-     * ISR 14 (#PF) into isr_handler.c's dispatch table.
-     * kernel_main no longer calls it directly (S2 did; S3 removed
-     * the call when it dropped idt_load_minimal). Without this call
-     * the table is all-NULL and every exception hits the unhandled halt.
-     */
     isr_handlers_init();
-
-    serial_puts("[ISR] S3 handlers installed "
-                "(exceptions -> S2 table, IRQs 0-15 -> S3 dispatch)\n");
+    serial_puts("[ISR] S3 handlers installed\n");
 }

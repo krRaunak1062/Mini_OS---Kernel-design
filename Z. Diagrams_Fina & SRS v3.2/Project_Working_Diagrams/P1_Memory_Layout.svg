@@ -1,0 +1,135 @@
+<svg viewBox="0 0 960 700" xmlns="http://www.w3.org/2000/svg" font-family="'Courier New', monospace">
+  <rect width="960" height="700" fill="#0d1117"/>
+
+  <text x="480" y="36" text-anchor="middle" font-size="18" font-weight="bold" fill="#58a6ff" letter-spacing="1">MEMORY LAYOUT — Physical vs Virtual Address Space</text>
+  <text x="480" y="56" text-anchor="middle" font-size="11" fill="#8b949e">MiniOS Group 31 | Sprints S1 + S2 | REQ-MEM-01 through REQ-MEM-05</text>
+  <line x1="60" y1="66" x2="900" y2="66" stroke="#30363d" stroke-width="1"/>
+
+  <!-- ============ PHYSICAL MEMORY (left) ============ -->
+  <text x="220" y="90" text-anchor="middle" font-size="14" font-weight="bold" fill="#f0883e">PHYSICAL ADDRESS SPACE</text>
+  <text x="220" y="106" text-anchor="middle" font-size="10" fill="#8b949e">(QEMU 32MB RAM)</text>
+
+  <!-- Address bar base -->
+  <rect x="130" y="116" width="180" height="536" rx="3" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- BIOS Reserved -->
+  <rect x="130" y="116" width="180" height="32" rx="3" fill="#30363d"/>
+  <text x="220" y="128" text-anchor="middle" font-size="9" fill="#8b949e">0x00000000</text>
+  <text x="220" y="141" text-anchor="middle" font-size="9" fill="#6e7681">BIOS / IVT / Reserved</text>
+
+  <!-- Kernel code/data -->
+  <rect x="130" y="148" width="180" height="80" fill="#f0883e" opacity="0.75"/>
+  <text x="220" y="164" text-anchor="middle" font-size="9" font-weight="bold" fill="#0d1117">0x00100000</text>
+  <text x="220" y="178" text-anchor="middle" font-size="11" font-weight="bold" fill="#0d1117">kernel.elf</text>
+  <text x="220" y="192" text-anchor="middle" font-size="9" fill="#0d1117">.text / .rodata</text>
+  <text x="220" y="206" text-anchor="middle" font-size="9" fill="#0d1117">.data / .bss</text>
+  <text x="220" y="220" text-anchor="middle" font-size="8" fill="#0d1117">load addr: 0x100000</text>
+
+  <!-- identity-mapped first 4MB label -->
+  <line x1="130" y1="116" x2="90" y2="116" stroke="#6e7681" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="130" y1="260" x2="90" y2="260" stroke="#6e7681" stroke-width="1" stroke-dasharray="3,2"/>
+  <line x1="90" y1="116" x2="90" y2="260" stroke="#6e7681" stroke-width="1"/>
+  <text x="82" y="188" text-anchor="middle" font-size="9" fill="#6e7681" transform="rotate(-90,82,188)">identity-mapped first 4MB</text>
+
+  <!-- Kernel stack area -->
+  <rect x="130" y="228" width="180" height="32" fill="#d2a8ff" opacity="0.6"/>
+  <text x="220" y="248" text-anchor="middle" font-size="9" fill="#0d1117">boot stack (16KB)</text>
+
+  <!-- Heap area -->
+  <rect x="130" y="260" width="180" height="100" fill="#3fb950" opacity="0.75"/>
+  <text x="220" y="278" text-anchor="middle" font-size="9" font-weight="bold" fill="#0d1117">0x00500000</text>
+  <text x="220" y="294" text-anchor="middle" font-size="11" font-weight="bold" fill="#0d1117">Kernel Heap</text>
+  <text x="220" y="310" text-anchor="middle" font-size="9" fill="#0d1117">4MB kmalloc pool</text>
+  <text x="220" y="324" text-anchor="middle" font-size="9" fill="#0d1117">TCBs + task stacks</text>
+  <text x="220" y="340" text-anchor="middle" font-size="8" fill="#0d1117">0x00900000 end</text>
+
+  <!-- Bitmap -->
+  <rect x="130" y="360" width="180" height="32" fill="#58a6ff" opacity="0.6"/>
+  <text x="220" y="377" text-anchor="middle" font-size="9" fill="#0d1117">Frame bitmap (1 bit/4KB)</text>
+
+  <!-- Free RAM -->
+  <rect x="130" y="392" width="180" height="200" fill="#21262d"/>
+  <text x="220" y="500" text-anchor="middle" font-size="10" fill="#6e7681">free RAM</text>
+  <text x="220" y="516" text-anchor="middle" font-size="9" fill="#30363d">available to</text>
+  <text x="220" y="530" text-anchor="middle" font-size="9" fill="#30363d">mm_alloc_frame()</text>
+
+  <!-- Top -->
+  <text x="220" y="608" text-anchor="middle" font-size="9" fill="#8b949e">0x02000000</text>
+  <text x="220" y="620" text-anchor="middle" font-size="9" fill="#6e7681">(32MB top)</text>
+
+  <!-- ============ VIRTUAL MEMORY (right) ============ -->
+  <text x="680" y="90" text-anchor="middle" font-size="14" font-weight="bold" fill="#3fb950">VIRTUAL ADDRESS SPACE</text>
+  <text x="680" y="106" text-anchor="middle" font-size="10" fill="#8b949e">(4GB, paging enabled via CR0.PG)</text>
+
+  <rect x="590" y="116" width="180" height="536" rx="3" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- Low 4MB identity (user) -->
+  <rect x="590" y="116" width="180" height="80" fill="#f0883e" opacity="0.3"/>
+  <text x="680" y="134" text-anchor="middle" font-size="9" fill="#f0883e">0x00000000</text>
+  <text x="680" y="148" text-anchor="middle" font-size="9" fill="#8b949e">Identity Map (first 4MB)</text>
+  <text x="680" y="162" text-anchor="middle" font-size="8" fill="#6e7681">required before paging on</text>
+  <text x="680" y="176" text-anchor="middle" font-size="8" fill="#6e7681">paging_identity_map_first4mb()</text>
+  <text x="680" y="190" text-anchor="middle" font-size="8" fill="#6e7681">virt == phys here</text>
+
+  <!-- User space gap -->
+  <rect x="590" y="196" width="180" height="200" fill="#21262d"/>
+  <text x="680" y="300" text-anchor="middle" font-size="10" fill="#6e7681">user space</text>
+  <text x="680" y="316" text-anchor="middle" font-size="9" fill="#30363d">(future DPL=3 tasks)</text>
+  <text x="680" y="332" text-anchor="middle" font-size="9" fill="#30363d">U/S=1 pages only</text>
+  <text x="680" y="360" text-anchor="middle" font-size="9" fill="#6e7681">0xBFFFFFFF</text>
+
+  <!-- Kernel higher half -->
+  <rect x="590" y="396" width="180" height="80" fill="#f0883e" opacity="0.75"/>
+  <text x="680" y="413" text-anchor="middle" font-size="9" font-weight="bold" fill="#0d1117">0xC0000000</text>
+  <text x="680" y="428" text-anchor="middle" font-size="11" font-weight="bold" fill="#0d1117">kernel virtual</text>
+  <text x="680" y="442" text-anchor="middle" font-size="9" fill="#0d1117">paging_map_kernel()</text>
+  <text x="680" y="456" text-anchor="middle" font-size="8" fill="#0d1117">Supervisor bit set (U/S=0)</text>
+  <text x="680" y="468" text-anchor="middle" font-size="8" fill="#0d1117">phys: 0x100000</text>
+
+  <!-- Kernel heap virt -->
+  <rect x="590" y="476" width="180" height="80" fill="#3fb950" opacity="0.75"/>
+  <text x="680" y="493" text-anchor="middle" font-size="9" font-weight="bold" fill="#0d1117">0xC0400000</text>
+  <text x="680" y="508" text-anchor="middle" font-size="11" font-weight="bold" fill="#0d1117">kernel heap virt</text>
+  <text x="680" y="522" text-anchor="middle" font-size="9" fill="#0d1117">paging_map_heap()</text>
+  <text x="680" y="536" text-anchor="middle" font-size="8" fill="#0d1117">phys: 0x500000–0x8FFFFF</text>
+
+  <!-- Top remaining -->
+  <rect x="590" y="556" width="180" height="96" fill="#21262d"/>
+  <text x="680" y="610" text-anchor="middle" font-size="9" fill="#6e7681">0xFFFFFFFF</text>
+  <text x="680" y="624" text-anchor="middle" font-size="8" fill="#30363d">(unmapped)</text>
+
+  <!-- ============ MAPPING ARROWS ============ -->
+  <!-- Identity map arrow -->
+  <line x1="310" y1="156" x2="590" y2="156" stroke="#f0883e" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrmap)"/>
+  <text x="450" y="146" text-anchor="middle" font-size="9" fill="#f0883e">identity (virt=phys)</text>
+
+  <!-- Heap mapping arrow -->
+  <line x1="310" y1="310" x2="590" y2="516" stroke="#3fb950" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrmap2)"/>
+  <text x="450" y="408" text-anchor="middle" font-size="9" fill="#3fb950" transform="rotate(-17,450,408)">0x500000 → 0xC0400000</text>
+
+  <!-- Kernel code mapping arrow -->
+  <line x1="310" y1="188" x2="590" y2="436" stroke="#f0883e" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrmap)"/>
+  <text x="430" y="290" text-anchor="middle" font-size="9" fill="#f0883e" transform="rotate(-30,430,290)">0x100000 → 0xC0000000</text>
+
+  <!-- CR3 / PD label -->
+  <rect x="390" y="560" width="185" height="70" rx="6" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+  <text x="482" y="578" text-anchor="middle" font-size="10" font-weight="bold" fill="#58a6ff">Page Directory (CR3)</text>
+  <text x="482" y="592" text-anchor="middle" font-size="9" fill="#8b949e">1024 PDEs × 1024 PTEs</text>
+  <text x="482" y="606" text-anchor="middle" font-size="8" fill="#6e7681">paging_create_directory()</text>
+  <text x="482" y="618" text-anchor="middle" font-size="8" fill="#6e7681">loaded: paging_load_directory(CR3)</text>
+  <text x="482" y="630" text-anchor="middle" font-size="8" fill="#6e7681">enabled: paging_enable() → CR0.PG=1</text>
+
+  <!-- NFR-SEC-01 note -->
+  <rect x="390" y="640" width="185" height="32" rx="4" fill="#161b22" stroke="#f85149" stroke-width="1"/>
+  <text x="482" y="653" text-anchor="middle" font-size="9" fill="#f85149">NFR-SEC-01: U/S=0 on all kernel PTEs</text>
+  <text x="482" y="665" text-anchor="middle" font-size="8" fill="#6e7681">user access → Page Fault (ISR 14)</text>
+
+  <defs>
+    <marker id="arrmap" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="#f0883e"/>
+    </marker>
+    <marker id="arrmap2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L7,3 z" fill="#3fb950"/>
+    </marker>
+  </defs>
+</svg>

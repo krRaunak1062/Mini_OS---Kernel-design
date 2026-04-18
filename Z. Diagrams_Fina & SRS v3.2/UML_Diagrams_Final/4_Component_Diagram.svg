@@ -1,0 +1,232 @@
+<svg viewBox="0 0 1100 760" xmlns="http://www.w3.org/2000/svg" font-family="'Courier New', monospace">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#475569"/>
+    </marker>
+    <marker id="dep" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f59e0b"/>
+    </marker>
+    <filter id="shadow">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-color="#00000050"/>
+    </filter>
+  </defs>
+
+  <rect width="1100" height="760" fill="#0f172a"/>
+  <rect x="0" y="0" width="1100" height="42" fill="#1e293b"/>
+  <text x="550" y="27" text-anchor="middle" font-size="15" font-weight="bold" fill="#e2e8f0" letter-spacing="2">COMPONENT DIAGRAM — MiniOS Kernel Subsystem Structure</text>
+  <text x="550" y="39" text-anchor="middle" font-size="9" fill="#64748b">MiniOS Group 31 | IIT Jodhpur | NFR-MAINT-01, NFR-PORT-01 | Directory: boot/ arch/ arch/x86/ mm/ scheduler/ include/ kernel/</text>
+
+  <!-- ===================== «system» MiniOS Kernel outer border ===================== -->
+  <rect x="15" y="55" width="1070" height="690" rx="8" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="8,4"/>
+  <text x="30" y="73" font-size="12" fill="#64748b">«system» MiniOS Kernel</text>
+
+  <!-- ===================== boot/ subsystem ===================== -->
+  <rect x="30" y="82" width="220" height="110" rx="6" fill="#1a2035" stroke="#60a5fa" stroke-width="2"/>
+  <text x="140" y="98" text-anchor="middle" font-size="11" font-weight="bold" fill="#93c5fd">«subsystem» boot/</text>
+  <rect x="50" y="108" width="180" height="70" rx="4" fill="#0f1d35" stroke="#3b82f6" stroke-width="1"/>
+  <text x="140" y="124" text-anchor="middle" font-size="10" font-weight="bold" fill="#bfdbfe">boot_module</text>
+  <line x1="50" y1="130" x2="230" y2="130" stroke="#3b82f6" stroke-width="0.5"/>
+  <text x="60" y="143" font-size="9" fill="#93c5fd">boot.asm: Multiboot 0x1BADB002</text>
+  <text x="60" y="155" font-size="9" fill="#93c5fd">→ protected mode → kernel_main</text>
+  <text x="60" y="167" font-size="8" fill="#64748b">// REQ-MEM-01</text>
+
+  <!-- ===================== kernel/ subsystem ===================== -->
+  <rect x="270" y="82" width="270" height="110" rx="6" fill="#1a2035" stroke="#60a5fa" stroke-width="2"/>
+  <text x="405" y="98" text-anchor="middle" font-size="11" font-weight="bold" fill="#93c5fd">«subsystem» kernel/</text>
+
+  <rect x="285" y="108" width="115" height="70" rx="4" fill="#0f1d35" stroke="#3b82f6" stroke-width="1"/>
+  <text x="342" y="124" text-anchor="middle" font-size="9" font-weight="bold" fill="#bfdbfe">vga_module</text>
+  <line x1="285" y1="130" x2="400" y2="130" stroke="#3b82f6" stroke-width="0.5"/>
+  <text x="342" y="143" text-anchor="middle" font-size="8.5" fill="#93c5fd">vga.c</text>
+  <text x="342" y="155" text-anchor="middle" font-size="8.5" fill="#93c5fd">0xB8000 80×25</text>
+  <text x="342" y="167" font-size="8" fill="#64748b">vga_putchar/puts</text>
+
+  <rect x="410" y="108" width="115" height="70" rx="4" fill="#0f1d35" stroke="#3b82f6" stroke-width="1"/>
+  <text x="467" y="124" text-anchor="middle" font-size="9" font-weight="bold" fill="#bfdbfe">serial_module</text>
+  <line x1="410" y1="130" x2="525" y2="130" stroke="#3b82f6" stroke-width="0.5"/>
+  <text x="467" y="143" text-anchor="middle" font-size="8.5" fill="#93c5fd">serial.c</text>
+  <text x="467" y="155" text-anchor="middle" font-size="8.5" fill="#93c5fd">COM1 0x3F8</text>
+  <text x="467" y="167" font-size="8" fill="#64748b">9600 baud</text>
+
+  <!-- ===================== mm/ subsystem ===================== -->
+  <rect x="30" y="215" width="480" height="230" rx="6" fill="#0c1f16" stroke="#22c55e" stroke-width="2" filter="url(#shadow)"/>
+  <text x="270" y="232" text-anchor="middle" font-size="12" font-weight="bold" fill="#86efac">«subsystem» mm/ (Memory Management)</text>
+  <text x="270" y="245" text-anchor="middle" font-size="9" fill="#4ade80">Owner: Aman Yadav (B24CS1006) | S1, S2</text>
+
+  <!-- physical mm -->
+  <rect x="50" y="255" width="200" height="100" rx="4" fill="#0a1a10" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="150" y="271" text-anchor="middle" font-size="10" font-weight="bold" fill="#bbf7d0">physical_memory_manager</text>
+  <line x1="50" y1="277" x2="250" y2="277" stroke="#16a34a" stroke-width="0.5"/>
+  <text x="60" y="291" font-size="9" fill="#86efac">bitmap : uint32_t[]</text>
+  <text x="60" y="304" font-size="9" fill="#86efac">totalRAM : uint32_t</text>
+  <line x1="50" y1="310" x2="250" y2="310" stroke="#16a34a" stroke-width="0.5"/>
+  <text x="60" y="323" font-size="9" fill="#4ade80">mm_alloc_frame()</text>
+  <text x="60" y="336" font-size="9" fill="#4ade80">mm_free_frame(addr)</text>
+  <text x="60" y="348" font-size="8" fill="#6b7280">mm/mm_phys.c — REQ-MEM-03</text>
+
+  <!-- Interface: IFrameAlloc -->
+  <circle cx="250" cy="300" r="6" fill="none" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="256" y="298" font-size="8" fill="#86efac">IFrameAlloc</text>
+
+  <!-- virtual mm -->
+  <rect x="270" y="255" width="220" height="115" rx="4" fill="#0a1a10" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="380" y="271" text-anchor="middle" font-size="10" font-weight="bold" fill="#bbf7d0">virtual_memory_manager</text>
+  <line x1="270" y1="277" x2="490" y2="277" stroke="#16a34a" stroke-width="0.5"/>
+  <text x="280" y="291" font-size="9" fill="#86efac">heap_virt : 0xC0400000</text>
+  <text x="280" y="304" font-size="9" fill="#86efac">heap_phys : 0x00500000</text>
+  <text x="280" y="317" font-size="9" fill="#86efac">page_dir_t*</text>
+  <line x1="270" y1="323" x2="490" y2="323" stroke="#16a34a" stroke-width="0.5"/>
+  <text x="280" y="336" font-size="9" fill="#4ade80">paging_init()</text>
+  <text x="280" y="349" font-size="9" fill="#4ade80">paging_map_page(v,p,f)</text>
+  <text x="280" y="362" font-size="9" fill="#4ade80">paging_create_directory()</text>
+  <text x="280" y="367" font-size="8" fill="#6b7280">arch/x86/paging.c — REQ-MEM-02,04</text>
+
+  <!-- Interface: IPageDir -->
+  <circle cx="490" cy="330" r="6" fill="none" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="496" y="328" font-size="8" fill="#86efac">IPageDir</text>
+
+  <!-- heap -->
+  <rect x="50" y="375" width="200" height="55" rx="4" fill="#0a1a10" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="150" y="391" text-anchor="middle" font-size="10" font-weight="bold" fill="#bbf7d0">heap_manager</text>
+  <line x1="50" y1="397" x2="250" y2="397" stroke="#16a34a" stroke-width="0.5"/>
+  <text x="60" y="410" font-size="9" fill="#86efac">base: 0xC0400000  size: 4MB</text>
+  <text x="60" y="422" font-size="9" fill="#4ade80">kmalloc(size) | kfree(ptr)</text>
+  <text x="60" y="426" font-size="8" fill="#6b7280">mm/heap.c — REQ-MEM-04,05</text>
+
+  <!-- IFrameAlloc connection -->
+  <line x1="256" y1="300" x2="270" y2="300" stroke="#22c55e" stroke-width="1.5"/>
+
+  <!-- heap uses IFrameAlloc -->
+  <line x1="150" y1="375" x2="150" y2="356" stroke="#22c55e" stroke-width="1" stroke-dasharray="4,2"/>
+  <text x="155" y="368" font-size="8" fill="#16a34a">«uses»</text>
+
+  <!-- s5 integration note -->
+  <rect x="270" y="375" width="220" height="55" rx="4" fill="#0a1a10" stroke="#065f46" stroke-width="1.5"/>
+  <text x="380" y="391" text-anchor="middle" font-size="10" font-weight="bold" fill="#6ee7b7">s5_integration</text>
+  <line x1="270" y1="397" x2="490" y2="397" stroke="#065f46" stroke-width="0.5"/>
+  <text x="280" y="411" font-size="8.5" fill="#34d399">kernel/s5_integration.c</text>
+  <text x="280" y="423" font-size="8.5" fill="#34d399">14 NFR tests | NFR-PERF/SEC/REL</text>
+
+  <!-- ===================== scheduler/ subsystem ===================== -->
+  <rect x="560" y="215" width="520" height="230" rx="6" fill="#1a0a35" stroke="#9333ea" stroke-width="2" filter="url(#shadow)"/>
+  <text x="820" y="232" text-anchor="middle" font-size="12" font-weight="bold" fill="#d8b4fe">«subsystem» scheduler/ (Task Management)</text>
+  <text x="820" y="245" text-anchor="middle" font-size="9" fill="#c084fc">Owner: Raunak Kumar (B24CS1062) | S3, S4</text>
+
+  <!-- idt_manager -->
+  <rect x="575" y="255" width="215" height="115" rx="4" fill="#160a30" stroke="#7e22ce" stroke-width="1.5"/>
+  <text x="682" y="271" text-anchor="middle" font-size="10" font-weight="bold" fill="#e9d5ff">idt_manager</text>
+  <line x1="575" y1="277" x2="790" y2="277" stroke="#7e22ce" stroke-width="0.5"/>
+  <text x="585" y="291" font-size="9" fill="#d8b4fe">table[256] : idt_entry_t</text>
+  <text x="585" y="304" font-size="9" fill="#d8b4fe">DPL=0, 32-bit interrupt gate</text>
+  <line x1="575" y1="310" x2="790" y2="310" stroke="#7e22ce" stroke-width="0.5"/>
+  <text x="585" y="323" font-size="9" fill="#c084fc">idt_init() / idt_set_gate(n,fn,dpl)</text>
+  <text x="585" y="336" font-size="9" fill="#c084fc">isr_13() GPF | isr_14() PF</text>
+  <text x="585" y="349" font-size="9" fill="#c084fc">isr_stubs.asm — 256 entries</text>
+  <text x="585" y="362" font-size="8" fill="#6b7280">arch/x86/idt.c | isr_stubs.asm</text>
+
+  <!-- Interface: IInterrupt -->
+  <circle cx="790" cy="310" r="6" fill="none" stroke="#9333ea" stroke-width="1.5"/>
+  <text x="796" y="308" font-size="8" fill="#c084fc">IInterrupt</text>
+
+  <!-- task_manager -->
+  <rect x="820" y="255" width="240" height="140" rx="4" fill="#160a30" stroke="#7e22ce" stroke-width="1.5"/>
+  <text x="940" y="271" text-anchor="middle" font-size="10" font-weight="bold" fill="#e9d5ff">task_manager</text>
+  <line x1="820" y1="277" x2="1060" y2="277" stroke="#7e22ce" stroke-width="0.5"/>
+  <text x="830" y="291" font-size="9" fill="#d8b4fe">current_task : tcb_t*</text>
+  <text x="830" y="304" font-size="9" fill="#d8b4fe">queue_tail : tcb_t*  // circular</text>
+  <text x="830" y="317" font-size="9" fill="#d8b4fe">task_count : uint32_t</text>
+  <line x1="820" y1="323" x2="1060" y2="323" stroke="#7e22ce" stroke-width="0.5"/>
+  <text x="830" y="336" font-size="9" fill="#c084fc">task_create(fn) : tcb_t*</text>
+  <text x="830" y="349" font-size="9" fill="#c084fc">sched_add_task(tcb*)</text>
+  <text x="830" y="362" font-size="9" fill="#c084fc">sched_switch() / sched_start()</text>
+  <text x="830" y="378" font-size="9" fill="#c084fc">sched_next() — circular queue</text>
+  <text x="830" y="391" font-size="8" fill="#6b7280">scheduler/sched.c + task.c</text>
+
+  <!-- Interface: IPageDir from paging to task -->
+  <circle cx="820" cy="340" r="6" fill="none" stroke="#9333ea" stroke-width="1.5"/>
+  <text x="760" y="344" font-size="8" fill="#c084fc">IPageDir</text>
+
+  <!-- sched_add_task uses IFrameAlloc -->
+  <rect x="575" y="385" width="215" height="45" rx="4" fill="#160a30" stroke="#7e22ce" stroke-width="1.5"/>
+  <text x="682" y="401" text-anchor="middle" font-size="9" font-weight="bold" fill="#e9d5ff">sched (round-robin)</text>
+  <text x="682" y="414" text-anchor="middle" font-size="8.5" fill="#c084fc">timeSlice=10ms | PUSHF/CLI/POPF</text>
+  <text x="682" y="424" font-size="8" fill="#6b7280">                                 // REQ-TASK-04,05</text>
+
+  <!-- IInterrupt → task_manager -->
+  <line x1="796" y1="310" x2="820" y2="310" stroke="#9333ea" stroke-width="1.5"/>
+
+  <!-- EXT-SW-01: IPageDir from vmm to task_manager -->
+  <line x1="496" y1="330" x2="820" y2="340" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#dep)"/>
+  <text x="650" y="328" text-anchor="middle" font-size="9" fill="#f59e0b">EXT-SW-01: paging_create/free_directory</text>
+
+  <!-- ===================== arch/x86/ subsystem ===================== -->
+  <rect x="30" y="470" width="1050" height="155" rx="6" fill="#1a1000" stroke="#f59e0b" stroke-width="2" filter="url(#shadow)"/>
+  <text x="555" y="488" text-anchor="middle" font-size="12" font-weight="bold" fill="#fbbf24">«subsystem» arch/x86/ — Hardware Abstraction Layer (NFR-PORT-01)</text>
+  <text x="555" y="501" text-anchor="middle" font-size="9" fill="#f59e0b">All CR0/CR3/port I/O MUST reside here only — no hardware access outside this boundary</text>
+
+  <!-- arch modules -->
+  <rect x="50" y="512" width="135" height="80" rx="4" fill="#100c00" stroke="#d97706" stroke-width="1.5"/>
+  <text x="117" y="527" text-anchor="middle" font-size="9" font-weight="bold" fill="#fde68a">gdt_module</text>
+  <line x1="50" y1="533" x2="185" y2="533" stroke="#d97706" stroke-width="0.5"/>
+  <text x="60" y="547" font-size="8.5" fill="#fcd34d">gdt.c + gdt_flush.asm</text>
+  <text x="60" y="559" font-size="8.5" fill="#fcd34d">LGDT + far-jump CS flush</text>
+  <text x="60" y="571" font-size="8.5" fill="#fcd34d">null+code(0x9A)+data(0x92)</text>
+  <text x="60" y="583" font-size="8" fill="#78716c">REQ-MEM-01</text>
+
+  <rect x="200" y="512" width="135" height="80" rx="4" fill="#100c00" stroke="#d97706" stroke-width="1.5"/>
+  <text x="267" y="527" text-anchor="middle" font-size="9" font-weight="bold" fill="#fde68a">idt_module</text>
+  <line x1="200" y1="533" x2="335" y2="533" stroke="#d97706" stroke-width="0.5"/>
+  <text x="210" y="547" font-size="8.5" fill="#fcd34d">idt.c + idt_flush.asm</text>
+  <text x="210" y="559" font-size="8.5" fill="#fcd34d">LIDT — 256 gates</text>
+  <text x="210" y="571" font-size="8.5" fill="#fcd34d">DPL=0, 32-bit int gate</text>
+  <text x="210" y="583" font-size="8" fill="#78716c">REQ-TASK-01</text>
+
+  <rect x="350" y="512" width="135" height="80" rx="4" fill="#100c00" stroke="#d97706" stroke-width="1.5"/>
+  <text x="417" y="527" text-anchor="middle" font-size="9" font-weight="bold" fill="#fde68a">pic_module</text>
+  <line x1="350" y1="533" x2="485" y2="533" stroke="#d97706" stroke-width="0.5"/>
+  <text x="360" y="547" font-size="8.5" fill="#fcd34d">pic.c</text>
+  <text x="360" y="559" font-size="8.5" fill="#fcd34d">master 0x20 / slave 0xA0</text>
+  <text x="360" y="571" font-size="8.5" fill="#fcd34d">IRQ remap → 0x20–0x2F</text>
+  <text x="360" y="583" font-size="8" fill="#78716c">REQ-TASK-02</text>
+
+  <rect x="500" y="512" width="150" height="80" rx="4" fill="#100c00" stroke="#d97706" stroke-width="1.5"/>
+  <text x="575" y="527" text-anchor="middle" font-size="9" font-weight="bold" fill="#fde68a">pit_module</text>
+  <line x1="500" y1="533" x2="650" y2="533" stroke="#d97706" stroke-width="0.5"/>
+  <text x="510" y="547" font-size="8.5" fill="#fcd34d">pit.c — 100Hz (div=11932)</text>
+  <text x="510" y="559" font-size="8.5" fill="#fcd34d">port 0x43: 0x36 cmd</text>
+  <text x="510" y="571" font-size="8.5" fill="#fcd34d">pit_irq0_handler(): EOI first</text>
+  <text x="510" y="583" font-size="8" fill="#78716c">REQ-TASK-02 (NFR-PERF-02)</text>
+
+  <rect x="665" y="512" width="175" height="80" rx="4" fill="#100c00" stroke="#d97706" stroke-width="1.5"/>
+  <text x="752" y="527" text-anchor="middle" font-size="9" font-weight="bold" fill="#fde68a">context_switch.asm</text>
+  <line x1="665" y1="533" x2="840" y2="533" stroke="#d97706" stroke-width="0.5"/>
+  <text x="675" y="547" font-size="8.5" fill="#fcd34d">PUSHFD+CS+.resume+DS+PUSHAD</text>
+  <text x="675" y="559" font-size="8.5" fill="#fcd34d">save ESP → load ESP → CR3</text>
+  <text x="675" y="571" font-size="8.5" fill="#fcd34d">POPAD + IRET | .resume: ret</text>
+  <text x="675" y="583" font-size="8" fill="#78716c">REQ-TASK-05 (NFR-PERF-01)</text>
+
+  <rect x="855" y="512" width="195" height="80" rx="4" fill="#100c00" stroke="#d97706" stroke-width="1.5"/>
+  <text x="952" y="527" text-anchor="middle" font-size="9" font-weight="bold" fill="#fde68a">paging_asm + isr_stubs.asm</text>
+  <line x1="855" y1="533" x2="1050" y2="533" stroke="#d97706" stroke-width="0.5"/>
+  <text x="865" y="547" font-size="8.5" fill="#fcd34d">paging_asm.asm: CR0 bit31 set</text>
+  <text x="865" y="559" font-size="8.5" fill="#fcd34d">paging_load_directory: CR3 load</text>
+  <text x="865" y="571" font-size="8.5" fill="#fcd34d">isr_stubs: 0–31 + irq_common</text>
+  <text x="865" y="583" font-size="8" fill="#78716c">REQ-MEM-02, REQ-TASK-01</text>
+
+  <!-- Arrows from arch to subsystems -->
+  <line x1="117" y1="512" x2="140" y2="295" stroke="#d97706" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+  <line x1="267" y1="512" x2="680" y2="362" stroke="#d97706" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+  <line x1="575" y1="512" x2="680" y2="405" stroke="#d97706" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+  <line x1="752" y1="512" x2="850" y2="390" stroke="#d97706" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+
+  <!-- Legend -->
+  <rect x="30" y="638" width="500" height="50" rx="4" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="40" y="654" font-size="9" font-weight="bold" fill="#94a3b8">NFR-PORT-01: All CR0/CR3/outb/inb access STRICTLY confined to arch/x86/ directory</text>
+  <text x="40" y="668" font-size="8" fill="#64748b">NFR-MAINT-01: mm_* sched_* paging_* isr_* pit_* pic_* naming convention enforced across all modules</text>
+  <text x="40" y="680" font-size="8" fill="#64748b">EXT-SW-01: Interface contract — scheduler calls paging_create_directory() / paging_free_directory()</text>
+
+  <rect x="560" y="638" width="500" height="50" rx="4" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="570" y="654" font-size="9" font-weight="bold" fill="#94a3b8">Measured Results (S5 NFR Tests — all PASS):</text>
+  <text x="570" y="668" font-size="8" fill="#22c55e">NFR-PERF-01: context switch 0.3µs (req &lt;50µs)  |  NFR-PERF-02: 1000 ticks/10s</text>
+  <text x="570" y="680" font-size="8" fill="#22c55e">NFR-SEC-01: 0 user→kernel violations (2048+ PTEs)  |  NFR-REL-01: GPF+PF handlers active</text>
+</svg>

@@ -5,12 +5,12 @@
  * Round-robin scheduler with a circular singly-linked ready queue.
  *
  * Queue structure:
- *   queue_tail->next  →  head  →  task1  →  task2  →  ...  →  tail (= queue_tail)
+ *   queue_tail->next  →  head  →  task1  →  task2  →  ...  →  tail
  *   queue_tail always points to the LAST inserted task.
  *   The HEAD is always queue_tail->next.
  *
- * On every PIT tick, sched_switch() advances current_task to the
- * next READY task and calls context_switch(old, new).
+ * On every PIT tick, pit_irq0_handler() calls sched_switch(), which
+ * picks the next READY task and calls context_switch(old, new).
  *
  * Owner : Raunak Kumar (B24CS1062)
  * Sprint: S4
@@ -29,7 +29,7 @@ static tcb_t *queue_tail = 0; /* tail of circular ready queue           */
 static uint32_t task_count = 0;
 
 /* ---------------------------------------------------------------
- * sched_init — zero scheduler state.
+ * sched_init
  * Implements: REQ-TASK-04
  * --------------------------------------------------------------- */
 void sched_init(void)
@@ -48,33 +48,59 @@ void sched_add_task(tcb_t *task)
 {
     if (!task) return;
 
-    /* Disable interrupts while modifying queue */
-    __asm__ volatile ("cli");
+    /*
+     * R-14 FIX: Save and restore EFLAGS (interrupt flag) rather than
+     * unconditionally re-enabling interrupts with STI.
+     *
+     * If sched_add_task() is called from a context where interrupts are
+     * already disabled (e.g. from inside kernel_main before STI, or from
+     * a CLI'd section), a bare STI at the end would re-enable them
+     * unexpectedly, allowing IRQ0 to fire and call sched_switch() before
+     * the task is fully enqueued — a race on queue_tail.
+     *
+     * pushf saves current EFLAGS (including IF) onto the stack.
+     * cli  disables interrupts to protect the queue mutation.
+     * popf restores the original EFLAGS, re-enabling IF only if it was
+     *      set before this call.
+     */
+    uint32_t saved_flags;
+    __asm__ volatile (
+        "pushf\n"
+        "pop %0\n"
+        "cli\n"
+        : "=r"(saved_flags) : : "memory"
+    );
 
     if (queue_tail == 0) {
-        /* First task: points to itself */
         task->next = task;
         queue_tail = task;
     } else {
-        /* Insert after tail, before current head */
-        task->next       = queue_tail->next;  /* new->next = old head       */
-        queue_tail->next = task;              /* old tail->next = new task  */
-        queue_tail       = task;              /* advance tail to new task   */
+        task->next       = queue_tail->next;
+        queue_tail->next = task;
+        queue_tail       = task;
     }
     task->state = TASK_READY;
     task_count++;
 
-    __asm__ volatile ("sti");
+    __asm__ volatile (
+        "push %0\n"
+        "popf\n"
+        : : "r"(saved_flags) : "memory"
+    );
 
     serial_puts("[SCHED] Task added PID=");
-    serial_puts_hex(task->pid);   /* FIX: was serial_puthex */
+    serial_puts_hex(task->pid);
     serial_puts("\n");
 }
 
 /* ---------------------------------------------------------------
- * sched_next — return the NEXT ready task after current_task.
- * Walks the circular list, skipping non-READY tasks.
- * Returns current_task if nothing else is READY (fallback).
+ * sched_next — return the next READY task after current_task.
+ *
+ * Only returns TASK_READY tasks — never TASK_RUNNING.
+ * This prevents the current task from being re-selected, which
+ * would cause it to run twice in a row and starve other tasks.
+ *
+ * Returns current_task as a fallback only if no other task is READY.
  * Implements: REQ-TASK-04
  * --------------------------------------------------------------- */
 tcb_t *sched_next(void)
@@ -84,55 +110,56 @@ tcb_t *sched_next(void)
     tcb_t   *candidate = current_task->next;
     uint32_t checked   = 0;
 
-    /* Walk at most task_count steps to avoid infinite loop */
     while (checked < task_count) {
-        if (candidate->state == TASK_READY ||
-            candidate->state == TASK_RUNNING) {
+        if (candidate->state == TASK_READY) {
             return candidate;
         }
         candidate = candidate->next;
         checked++;
     }
-    return current_task;   /* fallback: stay on current task */
+
+    /* No other READY task found — stay on current */
+    return current_task;
 }
 
 /* ---------------------------------------------------------------
- * sched_switch — called from pit_irq0_handler() every tick.
+ * sched_switch — called from pit_irq0_handler() every 10ms tick.
+ *
+ * EOI has already been sent by pit_irq0_handler() before this call.
+ * context_switch() saves the old task's state and resumes the new one.
+ * For new tasks, context_switch()'s iret jumps directly to the task
+ * function and this call never returns for that invocation.
+ * For existing tasks, context_switch()'s iret lands at .resume in
+ * context_switch.asm, which falls through, and this function returns
+ * normally into pit_irq0_handler(), then irq_handler(), then the
+ * irq_common_stub which irets back into the task's previous position.
+ *
  * Implements: REQ-TASK-04, REQ-TASK-05
  * --------------------------------------------------------------- */
 void sched_switch(void)
 {
     if (!current_task) return;   /* scheduler not started yet */
-    if (task_count < 2) return;  /* only one task — nothing to switch to */
+    if (task_count < 2) return;  /* only one task — no switch needed */
 
     tcb_t *old_task = current_task;
     tcb_t *new_task = sched_next();
 
-    if (old_task == new_task) return;   /* same task, no-op */
+    if (old_task == new_task) return;
 
-    /* Update states */
     if (old_task->state == TASK_RUNNING)
         old_task->state = TASK_READY;
 
     new_task->state = TASK_RUNNING;
     current_task    = new_task;
 
-    /*
-     * Hand off to NASM context switch.
-     * context_switch saves old's regs onto old's kernel stack,
-     * switches ESP to new's kernel stack, switches CR3,
-     * restores new's regs, and resumes via IRET.
-     */
     context_switch(old_task, new_task);
 }
 
 /* ---------------------------------------------------------------
  * sched_start — enter the first task. Never returns.
  *
- * We perform a "bootstrap" context switch: craft a dummy TCB as
- * "old" so context_switch() has somewhere to save the initial
- * kernel context (which is then discarded forever).
- * After IRET, execution is inside the first task's function.
+ * Bootstrap: craft a dummy TCB as "old" so context_switch() has
+ * somewhere to save the initial kernel context (discarded forever).
  * Implements: REQ-TASK-04
  * --------------------------------------------------------------- */
 void sched_start(void)
@@ -142,19 +169,17 @@ void sched_start(void)
         return;
     }
 
-    /* Head of queue = first task to run */
     tcb_t *first = queue_tail->next;
     first->state = TASK_RUNNING;
     current_task = first;
 
     serial_puts("[SCHED] Starting first task PID=");
-    serial_puts_hex(first->pid);   /* FIX: was serial_puthex */
+    serial_puts_hex(first->pid);
     serial_puts("\n");
 
     /*
-     * Bootstrap dummy TCB for the outgoing "kernel main" context.
-     * Its saved state is never restored — we only need the struct
-     * to satisfy context_switch()'s old_task parameter.
+     * Bootstrap dummy TCB — context_switch() saves the kernel-main
+     * context here, but it is never restored.
      */
     tcb_t boot_tcb;
     boot_tcb.pid          = 0;
@@ -164,7 +189,6 @@ void sched_start(void)
     boot_tcb.next         = 0;
     boot_tcb.kernel_stack = 0;
 
-    /* Jump in — execution continues inside first->fn after IRET */
     context_switch(&boot_tcb, first);
 
     /* Unreachable */

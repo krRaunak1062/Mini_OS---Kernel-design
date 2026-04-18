@@ -1,0 +1,205 @@
+<svg viewBox="0 0 1100 760" xmlns="http://www.w3.org/2000/svg" font-family="'Courier New', monospace">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#475569"/>
+    </marker>
+    <marker id="dep" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f59e0b"/>
+    </marker>
+    <filter id="shadow">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-color="#00000050"/>
+    </filter>
+  </defs>
+
+  <rect width="1100" height="760" fill="#0f172a"/>
+  <rect x="0" y="0" width="1100" height="42" fill="#1e293b"/>
+  <text x="550" y="27" text-anchor="middle" font-size="15" font-weight="bold" fill="#e2e8f0" letter-spacing="2">COMPOSITE STRUCTURE DIAGRAM — kernel_system : KernelSystem</text>
+  <text x="550" y="39" text-anchor="middle" font-size="9" fill="#64748b">MiniOS Group 31 | IIT Jodhpur | Internal structure with port connectors and interface bindings</text>
+
+  <!-- Outer system box -->
+  <rect x="15" y="55" width="1070" height="490" rx="6" fill="none" stroke="#475569" stroke-width="2"/>
+  <text x="30" y="72" font-size="12" fill="#64748b">kernel_system : KernelSystem</text>
+
+  <!-- =================== mm: memory_manager =================== -->
+  <rect x="30" y="82" width="470" height="350" rx="6" fill="#0c1f16" stroke="#22c55e" stroke-width="2" filter="url(#shadow)"/>
+  <text x="265" y="100" text-anchor="middle" font-size="12" font-weight="bold" fill="#86efac">mm : memory_manager</text>
+
+  <!-- pmm -->
+  <rect x="50" y="112" width="200" height="130" rx="4" fill="#0a1a10" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="150" y="128" text-anchor="middle" font-size="10" font-weight="bold" fill="#bbf7d0">pmm : physical_memory_manager</text>
+  <line x1="50" y1="134" x2="250" y2="134" stroke="#16a34a" stroke-width="0.5"/>
+  <text x="60" y="148" font-size="9" fill="#86efac">bitmap : uint32_t[]</text>
+  <text x="60" y="161" font-size="9" fill="#86efac">totalRAM : uint32_t</text>
+  <line x1="50" y1="168" x2="250" y2="168" stroke="#16a34a" stroke-width="0.5"/>
+  <text x="60" y="181" font-size="9" fill="#4ade80">mm_alloc_frame() : uint32_t</text>
+  <text x="60" y="194" font-size="9" fill="#4ade80">mm_free_frame(addr) : void</text>
+  <text x="60" y="207" font-size="9" fill="#4ade80">mm_init(mbi : multiboot_info_t*)</text>
+  <text x="60" y="221" font-size="8" fill="#64748b">mm/mm_phys.c — REQ-MEM-03</text>
+
+  <!-- Provided port on pmm -->
+  <circle cx="250" cy="175" r="7" fill="#22c55e" stroke="#22c55e"/>
+  <text x="253" y="172" font-size="8" fill="#0a1a10">P</text>
+  <text x="258" y="183" font-size="7.5" fill="#86efac">P:IFrameAlloc</text>
+
+  <!-- vmm -->
+  <rect x="50" y="258" width="200" height="150" rx="4" fill="#0a1a10" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="150" y="274" text-anchor="middle" font-size="10" font-weight="bold" fill="#bbf7d0">vmm : virtual_memory_manager</text>
+  <line x1="50" y1="280" x2="250" y2="280" stroke="#16a34a" stroke-width="0.5"/>
+  <text x="60" y="294" font-size="9" fill="#86efac">pageDirectory : page_dir_t*</text>
+  <text x="60" y="307" font-size="9" fill="#86efac">heap_virt : 0xC0400000</text>
+  <text x="60" y="320" font-size="9" fill="#86efac">heap_phys : 0x00500000</text>
+  <line x1="50" y1="327" x2="250" y2="327" stroke="#16a34a" stroke-width="0.5"/>
+  <text x="60" y="340" font-size="9" fill="#4ade80">paging_init()</text>
+  <text x="60" y="353" font-size="9" fill="#4ade80">paging_map_page(v,p,f)</text>
+  <text x="60" y="366" font-size="9" fill="#4ade80">paging_create_directory()</text>
+  <text x="60" y="379" font-size="9" fill="#4ade80">paging_free_directory()</text>
+  <text x="60" y="392" font-size="8" fill="#64748b">arch/x86/paging.c — REQ-MEM-02,04</text>
+
+  <!-- Required port on vmm for IFrameAlloc -->
+  <circle cx="250" cy="295" r="7" fill="none" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="253" y="292" font-size="8" fill="#22c55e">R</text>
+  <text x="258" y="303" font-size="7.5" fill="#86efac">R:IFrameAlloc</text>
+
+  <!-- Provided port on vmm for IPageDir -->
+  <circle cx="250" cy="345" r="7" fill="#22c55e" stroke="#22c55e"/>
+  <text x="253" y="342" font-size="8" fill="#0a1a10">P</text>
+  <text x="258" y="353" font-size="7.5" fill="#86efac">P:IPageDir</text>
+
+  <!-- heap -->
+  <rect x="270" y="112" width="200" height="130" rx="4" fill="#0a1a10" stroke="#065f46" stroke-width="1.5"/>
+  <text x="370" y="128" text-anchor="middle" font-size="10" font-weight="bold" fill="#6ee7b7">heap : heap_manager</text>
+  <line x1="270" y1="134" x2="470" y2="134" stroke="#065f46" stroke-width="0.5"/>
+  <text x="280" y="148" font-size="9" fill="#34d399">heap_base : 0xC0400000</text>
+  <text x="280" y="161" font-size="9" fill="#34d399">heap_end  : 0xC0800000</text>
+  <text x="280" y="174" font-size="9" fill="#34d399">head : free_block*</text>
+  <line x1="270" y1="180" x2="470" y2="180" stroke="#065f46" stroke-width="0.5"/>
+  <text x="280" y="194" font-size="9" fill="#6ee7b7">kmalloc(size) : void*</text>
+  <text x="280" y="207" font-size="9" fill="#6ee7b7">kfree(ptr) : void</text>
+  <text x="280" y="220" font-size="8" fill="#64748b">mm/heap.c — REQ-MEM-04,05</text>
+
+  <!-- Required port on heap for IFrameAlloc -->
+  <circle cx="270" cy="175" r="7" fill="none" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="249" y="172" font-size="8" fill="#22c55e" text-anchor="end">R</text>
+  <text x="245" y="183" font-size="7.5" fill="#86efac" text-anchor="end">R:IFrameAlloc</text>
+
+  <!-- pte: page_entry -->
+  <rect x="270" y="258" width="200" height="130" rx="4" fill="#0a1a10" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="370" y="274" text-anchor="middle" font-size="10" font-weight="bold" fill="#bbf7d0">pte : page_entry</text>
+  <line x1="270" y1="280" x2="470" y2="280" stroke="#16a34a" stroke-width="0.5"/>
+  <text x="280" y="294" font-size="9" fill="#86efac">present : bool</text>
+  <text x="280" y="307" font-size="9" fill="#86efac">readWrite : bool</text>
+  <text x="280" y="320" font-size="9" fill="#e879f9">userSupervisor : bool ← NFR-SEC-01</text>
+  <text x="280" y="333" font-size="9" fill="#86efac">frameAddress : uint32_t</text>
+  <line x1="270" y1="339" x2="470" y2="339" stroke="#16a34a" stroke-width="0.5"/>
+  <text x="280" y="353" font-size="9" fill="#4ade80">set_flags(f : uint32_t)</text>
+  <text x="280" y="366" font-size="8" fill="#64748b">// 1024 PTEs per page table</text>
+  <text x="280" y="379" font-size="8" fill="#e879f9">// U/S=0 → kernel-only (Supervisor)</text>
+
+  <!-- IFrameAlloc connection: pmm PROVIDED → vmm REQUIRED -->
+  <line x1="250" y1="175" x2="270" y2="175" stroke="#22c55e" stroke-width="2"/>
+
+  <!-- IFrameAlloc connection: pmm PROVIDED → heap REQUIRED -->
+  <path d="M250 175 Q260 165 270 175" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="260" y="162" font-size="7.5" fill="#86efac" text-anchor="middle">P→R</text>
+
+  <!-- vmm PROVIDES IPageDir -->
+  <circle cx="470" cy="345" r="7" fill="none" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="473" y="342" font-size="8" fill="#22c55e">P</text>
+  <text x="478" y="353" font-size="7.5" fill="#86efac">→ EXT-SW-01</text>
+
+  <!-- =================== tm: task_manager =================== -->
+  <rect x="560" y="82" width="510" height="350" rx="6" fill="#1a0a35" stroke="#9333ea" stroke-width="2" filter="url(#shadow)"/>
+  <text x="815" y="100" text-anchor="middle" font-size="12" font-weight="bold" fill="#d8b4fe">tm : task_manager</text>
+
+  <!-- idt -->
+  <rect x="580" y="112" width="220" height="155" rx="4" fill="#160a30" stroke="#7e22ce" stroke-width="1.5"/>
+  <text x="690" y="128" text-anchor="middle" font-size="10" font-weight="bold" fill="#e9d5ff">idt : idt_manager</text>
+  <line x1="580" y1="134" x2="800" y2="134" stroke="#7e22ce" stroke-width="0.5"/>
+  <text x="590" y="148" font-size="9" fill="#d8b4fe">table[256] : idt_entry_t</text>
+  <text x="590" y="161" font-size="9" fill="#d8b4fe">DPL=0, 32-bit interrupt gate</text>
+  <line x1="580" y1="168" x2="800" y2="168" stroke="#7e22ce" stroke-width="0.5"/>
+  <text x="590" y="181" font-size="9" fill="#c084fc">idt_init() : void</text>
+  <text x="590" y="194" font-size="9" fill="#c084fc">idt_set_gate(n,fn,dpl)</text>
+  <text x="590" y="207" font-size="9" fill="#c084fc">isr_13() — GPF  |  isr_14() — PF</text>
+  <text x="590" y="220" font-size="9" fill="#c084fc">isr_stubs 0–31 in NASM</text>
+  <text x="590" y="233" font-size="8" fill="#64748b">arch/x86/idt.c + isr_stubs.asm</text>
+  <text x="590" y="246" font-size="8" fill="#64748b">REQ-TASK-01 | NFR-REL-01</text>
+  <text x="590" y="259" font-size="8" fill="#64748b">isr_handler.c: irq_common_stub</text>
+
+  <!-- Provided port: P:IInterrupt -->
+  <circle cx="800" cy="185" r="7" fill="#9333ea" stroke="#9333ea"/>
+  <text x="803" y="182" font-size="8" fill="white">P</text>
+  <text x="808" y="193" font-size="7.5" fill="#d8b4fe">P:IInterrupt</text>
+
+  <!-- tcb -->
+  <rect x="830" y="112" width="225" height="220" rx="4" fill="#160a30" stroke="#7e22ce" stroke-width="1.5"/>
+  <text x="942" y="128" text-anchor="middle" font-size="10" font-weight="bold" fill="#e9d5ff">tcb : TaskControlBlock</text>
+  <line x1="830" y1="134" x2="1055" y2="134" stroke="#7e22ce" stroke-width="0.5"/>
+  <!-- Exact fields from task.h -->
+  <text x="840" y="148" font-size="9" fill="#d8b4fe">pid          : uint32_t   // offset 0</text>
+  <text x="840" y="161" font-size="9" fill="#d8b4fe">state        : {READY=0,RUNNING=1,</text>
+  <text x="840" y="174" font-size="9" fill="#d8b4fe">               BLOCKED=2,TERM=3}</text>
+  <text x="840" y="187" font-size="9" fill="#e879f9">kernel_esp   : uint32_t   // offset 8 ★</text>
+  <text x="840" y="200" font-size="9" fill="#e879f9">page_dir     : uint32_t   // offset 12 ★</text>
+  <text x="840" y="213" font-size="9" fill="#d8b4fe">next         : tcb_t*     // offset 16</text>
+  <text x="840" y="226" font-size="9" fill="#d8b4fe">kernel_stack : uint8_t*   // offset 20</text>
+  <text x="840" y="239" font-size="8" fill="#7c3aed">★ _Static_assert verified</text>
+  <line x1="830" y1="244" x2="1055" y2="244" stroke="#7e22ce" stroke-width="0.5"/>
+  <text x="840" y="257" font-size="8.5" fill="#c084fc">Stack frame (top→bottom):</text>
+  <text x="840" y="270" font-size="8" fill="#a5b4fc">EFLAGS(0x202) CS(0x08) EIP(fn)</text>
+  <text x="840" y="282" font-size="8" fill="#a5b4fc">DS(0x10) EAX ECX EDX EBX</text>
+  <text x="840" y="294" font-size="8" fill="#a5b4fc">ESP EBP ESI EDI ← kernel_esp</text>
+  <text x="840" y="307" font-size="8" fill="#64748b">KERNEL_STACK_SIZE = 8192 bytes</text>
+  <text x="840" y="320" font-size="8" fill="#64748b">scheduler/task.c — REQ-TASK-03</text>
+
+  <!-- sched -->
+  <rect x="580" y="280" width="220" height="135" rx="4" fill="#160a30" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="690" y="296" text-anchor="middle" font-size="10" font-weight="bold" fill="#e0e7ff">sched : Scheduler</text>
+  <line x1="580" y1="302" x2="800" y2="302" stroke="#6366f1" stroke-width="0.5"/>
+  <text x="590" y="316" font-size="9" fill="#c7d2fe">algorithm : Round-Robin</text>
+  <text x="590" y="329" font-size="9" fill="#c7d2fe">timeSlice  : 10ms</text>
+  <text x="590" y="342" font-size="9" fill="#c7d2fe">task_count : uint32_t</text>
+  <line x1="580" y1="348" x2="800" y2="348" stroke="#6366f1" stroke-width="0.5"/>
+  <text x="590" y="362" font-size="9" fill="#818cf8">sched_switch()  — REQ-TASK-04</text>
+  <text x="590" y="375" font-size="9" fill="#818cf8">sched_add_task(tcb*) — PUSHF/CLI/POPF</text>
+  <text x="590" y="388" font-size="9" fill="#818cf8">sched_start() — boot_tcb bootstrap</text>
+  <text x="590" y="401" font-size="9" fill="#818cf8">sched_next() — skip non-READY</text>
+  <text x="590" y="407" font-size="8" fill="#64748b">scheduler/sched.c — REQ-TASK-04,05</text>
+
+  <!-- Required IInterrupt from sched -->
+  <circle cx="580" cy="350" r="7" fill="none" stroke="#9333ea" stroke-width="1.5"/>
+  <text x="559" y="347" font-size="8" fill="#9333ea" text-anchor="end">R</text>
+  <text x="554" y="358" font-size="7.5" fill="#d8b4fe" text-anchor="end">R:Interrupt</text>
+
+  <!-- IInterrupt connector: idt PROVIDED → sched REQUIRED -->
+  <path d="M800 185 Q810 185 810 300 Q810 350 580 350" fill="none" stroke="#9333ea" stroke-width="2"/>
+
+  <!-- Required IPageDir from sched (EXT-SW-01) -->
+  <circle cx="580" cy="320" r="7" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="559" y="317" font-size="8" fill="#f59e0b" text-anchor="end">R</text>
+  <text x="554" y="328" font-size="7.5" fill="#fbbf24" text-anchor="end">EXT-SW-01</text>
+
+  <!-- IPageDir connector from vmm to sched -->
+  <line x1="470" y1="345" x2="580" y2="320" stroke="#f59e0b" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#dep)"/>
+
+  <!-- sched → tcb uses -->
+  <line x1="800" y1="350" x2="830" y2="200" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr)"/>
+  <text x="818" y="285" font-size="8" fill="#818cf8" text-anchor="middle">«uses»</text>
+
+  <!-- =================== Deadlock Prevention =================== -->
+  <rect x="15" y="450" width="1070" height="95" rx="6" fill="#1a1200" stroke="#f59e0b" stroke-width="2"/>
+  <text x="30" y="468" font-size="11" font-weight="bold" fill="#fbbf24">dp : deadlock_prevention (cross-cutting — monitors both subsystems)</text>
+  <text x="30" y="484" font-size="9" fill="#fcd34d">Strategy: Resource Ordering — locks acquired in fixed order: mm (memory) → sched (scheduler) → io (hardware).</text>
+  <text x="30" y="497" font-size="9" fill="#fcd34d">Circular-wait impossible: ordering strict and enforced at compile-time via coding standards and code review.</text>
+  <text x="30" y="510" font-size="9" fill="#f59e0b">Deadlock Avoidance: Only one lock held at a time per subsystem; sched_switch() disables interrupts (cli/sti) during queue mutation via PUSHF/CLI/POPF.</text>
+  <text x="30" y="523" font-size="9" fill="#f59e0b">Livelock Prevention: Timer guarantees preemption every 10ms; sched_next() skips non-READY tasks, preventing any task from monopolising CPU indefinitely.</text>
+  <text x="30" y="536" font-size="9" fill="#f59e0b">Race Prevention: sched_add_task() saves EFLAGS, CLI, mutates queue, POPF — restores interrupt state exactly (R-14 fix, B-05 in Bug Register).</text>
+
+  <!-- =================== arch/x86 note =================== -->
+  <rect x="15" y="558" width="1070" height="50" rx="6" fill="#0a0a20" stroke="#475569" stroke-width="1.5"/>
+  <text x="30" y="576" font-size="10" font-weight="bold" fill="#94a3b8">arch/x86 layer — ALL hardware port accesses below this line (gdt, idt, pic, pit, context_switch.asm, paging_asm.asm, CR0/CR3)</text>
+  <text x="30" y="592" font-size="9" fill="#64748b">NFR-PORT-01: No CR0/CR3/outb/inb outside arch/x86/ directory. Verified by S5 code audit. Porting to new arch requires only rewriting arch/x86/.</text>
+
+  <!-- Outer border -->
+  <rect x="10" y="50" width="1080" height="560" fill="none" stroke="#334155" stroke-width="1" rx="2"/>
+</svg>

@@ -1,0 +1,174 @@
+<svg viewBox="0 0 900 860" xmlns="http://www.w3.org/2000/svg" font-family="'Courier New', monospace">
+  <rect width="900" height="860" fill="#0d1117"/>
+
+  <text x="450" y="36" text-anchor="middle" font-size="18" font-weight="bold" fill="#58a6ff" letter-spacing="1">KERNEL BOOT SEQUENCE — 22-Step Init Order</text>
+  <text x="450" y="56" text-anchor="middle" font-size="11" fill="#8b949e">MiniOS Group 31 | kernel/kernel_main.c | Critical ordering — do NOT reorder</text>
+  <line x1="60" y1="66" x2="840" y2="66" stroke="#30363d" stroke-width="1"/>
+
+  <!-- Swimlane headers -->
+  <rect x="60" y="76" width="150" height="28" rx="4" fill="#161b22" stroke="#f0883e" stroke-width="1.5"/>
+  <text x="135" y="94" text-anchor="middle" font-size="10" font-weight="bold" fill="#f0883e">S0 / Shardul</text>
+
+  <rect x="220" y="76" width="150" height="28" rx="4" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+  <text x="295" y="94" text-anchor="middle" font-size="10" font-weight="bold" fill="#3fb950">S1+S2 / Aman</text>
+
+  <rect x="380" y="76" width="150" height="28" rx="4" fill="#161b22" stroke="#d2a8ff" stroke-width="1.5"/>
+  <text x="455" y="94" text-anchor="middle" font-size="10" font-weight="bold" fill="#d2a8ff">S3 / Raunak</text>
+
+  <rect x="540" y="76" width="150" height="28" rx="4" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+  <text x="615" y="94" text-anchor="middle" font-size="10" font-weight="bold" fill="#58a6ff">S4 / Raunak</text>
+
+  <rect x="700" y="76" width="150" height="28" rx="4" fill="#161b22" stroke="#f0883e" stroke-width="1.5"/>
+  <text x="775" y="94" text-anchor="middle" font-size="10" font-weight="bold" fill="#f0883e">S5 / Jalendhar</text>
+
+  <!-- Swimlane vertical lines -->
+  <line x1="135" y1="104" x2="135" y2="820" stroke="#f0883e" stroke-width="0.5" opacity="0.3"/>
+  <line x1="295" y1="104" x2="295" y2="820" stroke="#3fb950" stroke-width="0.5" opacity="0.3"/>
+  <line x1="455" y1="104" x2="455" y2="820" stroke="#d2a8ff" stroke-width="0.5" opacity="0.3"/>
+  <line x1="615" y1="104" x2="615" y2="820" stroke="#58a6ff" stroke-width="0.5" opacity="0.3"/>
+  <line x1="775" y1="104" x2="775" y2="820" stroke="#f0883e" stroke-width="0.5" opacity="0.3"/>
+
+  <!-- Central spine -->
+  <line x1="450" y1="108" x2="450" y2="800" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- Step boxes — alternating left/right of spine -->
+  <!-- Each box: y=108 + (step-1)*32 -->
+
+  <!-- step 1: serial_init -->
+  <rect x="90" y="110" width="340" height="24" rx="4" fill="#161b22" stroke="#f0883e" stroke-width="1.5"/>
+  <text x="260" y="126" text-anchor="middle" font-size="9" fill="#f0883e">1. serial_init()  →  COM1 9600 baud</text>
+  <circle cx="450" cy="122" r="6" fill="#f0883e"/>
+
+  <!-- step 2: vga_init -->
+  <rect x="90" y="138" width="340" height="24" rx="4" fill="#161b22" stroke="#f0883e" stroke-width="1.5"/>
+  <text x="260" y="154" text-anchor="middle" font-size="9" fill="#f0883e">2. vga_init()  →  80×25 text mode, 0xB8000</text>
+  <circle cx="450" cy="150" r="6" fill="#f0883e"/>
+  <line x1="450" y1="122" x2="450" y2="144" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- step 3: gdt_init -->
+  <rect x="460" y="166" width="340" height="24" rx="4" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+  <text x="630" y="182" text-anchor="middle" font-size="9" fill="#3fb950">3. gdt_init()  →  null + CS(DPL=0) + DS(DPL=0)</text>
+  <circle cx="450" cy="178" r="6" fill="#3fb950"/>
+  <line x1="450" y1="150" x2="450" y2="172" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- step 4: mm_init -->
+  <rect x="460" y="194" width="340" height="24" rx="4" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+  <text x="630" y="210" text-anchor="middle" font-size="9" fill="#3fb950">4. mm_init(mbi)  →  parse Multiboot map, init bitmap</text>
+  <circle cx="450" cy="206" r="6" fill="#3fb950"/>
+  <line x1="450" y1="178" x2="450" y2="200" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- step 5: paging_create_directory -->
+  <rect x="460" y="222" width="340" height="24" rx="4" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+  <text x="630" y="238" text-anchor="middle" font-size="9" fill="#3fb950">5. paging_create_directory()  →  4KB page dir</text>
+  <circle cx="450" cy="234" r="6" fill="#3fb950"/>
+  <line x1="450" y1="206" x2="450" y2="228" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- step 6: identity_map_first4mb -->
+  <rect x="460" y="250" width="340" height="24" rx="4" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+  <text x="630" y="266" text-anchor="middle" font-size="9" fill="#3fb950">6. paging_identity_map_first4mb()  →  virt=phys 0-4MB</text>
+  <circle cx="450" cy="262" r="6" fill="#3fb950"/>
+  <line x1="450" y1="234" x2="450" y2="256" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- step 7: map_kernel -->
+  <rect x="460" y="278" width="340" height="24" rx="4" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+  <text x="630" y="294" text-anchor="middle" font-size="9" fill="#3fb950">7. paging_map_kernel()  →  0x100000 → 0xC0000000</text>
+  <circle cx="450" cy="290" r="6" fill="#3fb950"/>
+  <line x1="450" y1="262" x2="450" y2="284" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- step 8: map_heap -->
+  <rect x="460" y="306" width="340" height="24" rx="4" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+  <text x="630" y="322" text-anchor="middle" font-size="9" fill="#3fb950">8. paging_map_heap()  →  0x500000 → 0xC0400000</text>
+  <circle cx="450" cy="318" r="6" fill="#3fb950"/>
+  <line x1="450" y1="290" x2="450" y2="312" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- step 9: load_directory -->
+  <rect x="460" y="334" width="340" height="24" rx="4" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+  <text x="630" y="350" text-anchor="middle" font-size="9" fill="#3fb950">9. paging_load_directory()  →  write CR3</text>
+  <circle cx="450" cy="346" r="6" fill="#3fb950"/>
+  <line x1="450" y1="318" x2="450" y2="340" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- step 10: PAGING ON -->
+  <rect x="460" y="362" width="340" height="24" rx="4" fill="#3fb950" opacity="0.85" stroke="#3fb950" stroke-width="2"/>
+  <text x="630" y="378" text-anchor="middle" font-size="9" font-weight="bold" fill="#0d1117">10. paging_enable()  →  ★ CR0.PG = 1  PAGING ON</text>
+  <circle cx="450" cy="374" r="8" fill="#3fb950"/>
+  <line x1="450" y1="346" x2="450" y2="366" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- step 11: heap_init -->
+  <rect x="90" y="390" width="340" height="24" rx="4" fill="#161b22" stroke="#3fb950" stroke-width="1.5"/>
+  <text x="260" y="406" text-anchor="middle" font-size="9" fill="#3fb950">11. mm_heap_init()  →  4MB kmalloc pool ready</text>
+  <circle cx="450" cy="402" r="6" fill="#3fb950"/>
+  <line x1="450" y1="374" x2="450" y2="396" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- step 12: idt_init -->
+  <rect x="90" y="418" width="340" height="24" rx="4" fill="#161b22" stroke="#d2a8ff" stroke-width="1.5"/>
+  <text x="260" y="434" text-anchor="middle" font-size="9" fill="#d2a8ff">12. idt_init()  →  256 gates, LIDT</text>
+  <circle cx="450" cy="430" r="6" fill="#d2a8ff"/>
+  <line x1="450" y1="402" x2="450" y2="424" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- step 13: pic_remap -->
+  <rect x="90" y="446" width="340" height="24" rx="4" fill="#161b22" stroke="#d2a8ff" stroke-width="1.5"/>
+  <text x="260" y="462" text-anchor="middle" font-size="9" fill="#d2a8ff">13. pic_remap()  →  master=0x20, slave=0x28</text>
+  <circle cx="450" cy="458" r="6" fill="#d2a8ff"/>
+  <line x1="450" y1="430" x2="450" y2="452" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- step 14: pit_init -->
+  <rect x="90" y="474" width="340" height="24" rx="4" fill="#161b22" stroke="#d2a8ff" stroke-width="1.5"/>
+  <text x="260" y="490" text-anchor="middle" font-size="9" fill="#d2a8ff">14. pit_init()  →  100Hz, div=11932 → port 0x40</text>
+  <circle cx="450" cy="486" r="6" fill="#d2a8ff"/>
+  <line x1="450" y1="458" x2="450" y2="480" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- step 15: isr_install -->
+  <rect x="90" y="502" width="340" height="24" rx="4" fill="#161b22" stroke="#d2a8ff" stroke-width="1.5"/>
+  <text x="260" y="518" text-anchor="middle" font-size="9" fill="#d2a8ff">15. isr_install()  →  ISR 0-31 + IRQ 0-15 handlers</text>
+  <circle cx="450" cy="514" r="6" fill="#d2a8ff"/>
+  <line x1="450" y1="486" x2="450" y2="508" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- step 16: STI (before tests) -->
+  <rect x="90" y="530" width="340" height="24" rx="4" fill="#f0883e" opacity="0.85" stroke="#f0883e" stroke-width="2"/>
+  <text x="260" y="546" text-anchor="middle" font-size="9" font-weight="bold" fill="#0d1117">16. __asm__ STI  →  ★ IRQs enabled (PIT fires)</text>
+  <circle cx="450" cy="542" r="8" fill="#f0883e"/>
+  <line x1="450" y1="514" x2="450" y2="534" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- step 17: s5_run_all_tests -->
+  <rect x="460" y="558" width="340" height="24" rx="4" fill="#161b22" stroke="#f0883e" stroke-width="1.5"/>
+  <text x="630" y="574" text-anchor="middle" font-size="9" fill="#f0883e">17. s5_run_all_tests()  →  14 NFR tests (~12s)</text>
+  <circle cx="450" cy="570" r="6" fill="#f0883e"/>
+  <line x1="450" y1="542" x2="450" y2="564" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- step 18: CLI -->
+  <rect x="460" y="586" width="340" height="24" rx="4" fill="#161b22" stroke="#f0883e" stroke-width="1.5"/>
+  <text x="630" y="602" text-anchor="middle" font-size="9" fill="#f0883e">18. __asm__ CLI  →  disable IRQs briefly</text>
+  <circle cx="450" cy="598" r="6" fill="#f0883e"/>
+  <line x1="450" y1="570" x2="450" y2="592" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- step 19: sched_init -->
+  <rect x="460" y="614" width="340" height="24" rx="4" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+  <text x="630" y="630" text-anchor="middle" font-size="9" fill="#58a6ff">19. sched_init()  →  queue_tail=0, current_task=0</text>
+  <circle cx="450" cy="626" r="6" fill="#58a6ff"/>
+  <line x1="450" y1="598" x2="450" y2="620" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- step 20: task_create x3 -->
+  <rect x="460" y="642" width="340" height="24" rx="4" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+  <text x="630" y="658" text-anchor="middle" font-size="9" fill="#58a6ff">20. task_create(A/B/C)  →  3 TCBs + 8KB stacks each</text>
+  <circle cx="450" cy="654" r="6" fill="#58a6ff"/>
+  <line x1="450" y1="626" x2="450" y2="648" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- step 21: sched_add_task x3 -->
+  <rect x="460" y="670" width="340" height="24" rx="4" fill="#161b22" stroke="#58a6ff" stroke-width="1.5"/>
+  <text x="630" y="686" text-anchor="middle" font-size="9" fill="#58a6ff">21. sched_add_task(A/B/C)  →  circular queue built</text>
+  <circle cx="450" cy="682" r="6" fill="#58a6ff"/>
+  <line x1="450" y1="654" x2="450" y2="676" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- step 22: STI + sched_start FINAL -->
+  <rect x="90" y="698" width="700" height="28" rx="5" fill="#58a6ff" opacity="0.85" stroke="#58a6ff" stroke-width="2.5"/>
+  <text x="440" y="716" text-anchor="middle" font-size="10" font-weight="bold" fill="#0d1117">22. STI + sched_start()  →  ★ NEVER RETURNS — round-robin scheduler running</text>
+  <circle cx="450" cy="712" r="9" fill="#58a6ff"/>
+  <line x1="450" y1="682" x2="450" y2="702" stroke="#30363d" stroke-width="1.5"/>
+
+  <!-- Critical note -->
+  <rect x="60" y="744" width="780" height="72" rx="6" fill="#161b22" stroke="#f85149" stroke-width="1.5"/>
+  <text x="450" y="762" text-anchor="middle" font-size="10" font-weight="bold" fill="#f85149">⚠  Critical Ordering Rationale</text>
+  <text x="450" y="778" text-anchor="middle" font-size="9" fill="#8b949e">PIC remapped (13) BEFORE STI (16) — avoids spurious IRQs on wrong vectors during PIC init</text>
+  <text x="450" y="792" text-anchor="middle" font-size="9" fill="#8b949e">STI (16) BEFORE s5_run_all_tests (17) — PERF-02 needs real PIT ticks to measure 10s</text>
+  <text x="450" y="806" text-anchor="middle" font-size="9" fill="#8b949e">s5_run_all_tests (17) BEFORE sched_start (22) — current_task=NULL so sched_switch() is no-op during NFR tests</text>
+</svg>
